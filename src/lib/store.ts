@@ -13,6 +13,7 @@ export interface ProductVariant {
   size: string;
   stock: number;
   sku?: string;
+  price?: number;
 }
 
 export interface Product {
