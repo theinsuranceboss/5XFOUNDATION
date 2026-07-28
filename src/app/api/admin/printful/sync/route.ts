@@ -124,16 +124,43 @@ export async function POST() {
         });
   
         if (existingProduct) {
-          // Update product price, title, categoryId & set syncId, but do not touch existing images and variants
+          // Update product price, title, categoryId & set syncId
           await db.product.update({
             where: { id: existingProduct.id },
-            data: { 
+            data: {
               title,
               price: basePrice,
               syncId: String(p.id),
               categoryId: productCategory.id
             }
           });
+
+          // ALSO SYNC IMAGES: delete old images and insert fresh from Printful
+          await db.productImage.deleteMany({ where: { productId: existingProduct.id } });
+          for (let i = 0; i < images.length; i++) {
+            await db.productImage.create({
+              data: {
+                productId: existingProduct.id,
+                url: images[i].url,
+                type: images[i].type,
+                order: i
+              }
+            });
+          }
+
+          // ALSO SYNC VARIANTS: delete old variants and insert fresh from Printful
+          await db.productVariant.deleteMany({ where: { productId: existingProduct.id } });
+          for (const variant of variants) {
+            await db.productVariant.create({
+              data: {
+                productId: existingProduct.id,
+                color: variant.color,
+                size: variant.size,
+                sku: variant.sku,
+                stock: variant.stock
+              }
+            });
+          }
         } else {
           // Create new
           existingProduct = await db.product.create({

@@ -414,6 +414,14 @@ export default function Home() {
     storiesTitleSize: "64",
     storiesTitleAlign: "center",
     storiesTitleBold: true,
+    storiesNameColor: "#FFFFFF",
+    storiesNameSize: "48",
+    storiesNameAlign: "left",
+    storiesNameBold: true,
+    storiesDescColor: "#FFFFFF",
+    storiesDescSize: "20",
+    storiesDescAlign: "left",
+    storiesDescBold: false,
     fundraisingTitleColor: "#FFFFFF",
     fundraisingDescColor: "#9CA3AF",
     fundraisingTitleSize: "72",
@@ -457,9 +465,17 @@ export default function Home() {
   });
 
   const [stories, setStories] = useState([
-    { id: 'elena', name: 'Elena Rodriguez', tag: 'Outdoor Mentor', journey: 'Elena was diagnosed with osteosarcoma in her early 30s, which eventually led to an above-the-knee amputation. While she beat the cancer, the loss of her leg felt like the loss of her identity. High-performance "running blades" were financially out of reach, and she felt isolated from her old hiking groups.', help: 'The foundation provided Elena with a grant to cover the out-of-pocket costs for a specialized prosthetic limb designed for athletic activity. Beyond the hardware, Elena joined a 5X-sponsored community meet-up where she met other amputee athletes. Today, she isn\'t just walking; she’s mentoring other survivors on how to navigate local trails.', img: '/images/stories/elena.png' },
-    { id: 'marcus', name: 'Marcus Thorne', tag: 'Creative Force', journey: 'Marcus faced a rare soft-tissue sarcoma that resulted in the loss of his dominant arm. As a freelancer, the mounting care-related costs—travel for treatments, specialized physical therapy, and home modifications—began to overwhelm his family’s savings.', help: 'The 5X Foundation stepped in to ease the burden of care-related costs, allowing Marcus to focus on his rehabilitation without the looming threat of debt. Through the foundation’s community events, Marcus found a "supportive community grounded in purpose," eventually designing a limited-edition merchandise line for the foundation, which helped him reclaim his confidence as a creator.', img: '/images/stories/marcus.png' },
-    { id: 'chloe', name: 'Chloe Chen', tag: 'Academic Excellence', journey: 'Chloe was diagnosed with cancer during her sophomore year. The surgery to save her life resulted in limb loss, and she struggled with the "why me" of it all. She felt out of place on a college campus and worried that she would never have the stamina or the self-assurance to finish her degree.', help: 'Chloe attended a Five Time Foundation™ nightlife fundraiser, where she saw people celebrating life and strength despite their scars. The foundation’s "strength and perseverance" philosophy resonated with her. 5X helped facilitate a connection with a mentor—another survivor who had navigated the professional world with a prosthetic—giving Chloe the social and emotional "connection" she needed to return to school and graduate top of her class.', img: '/images/stories/chloe.png' }
+    {
+      id: 'connor',
+      name: 'Connor Young',
+      tag: 'Ewing Sarcoma Survivor',
+      journey: 'Connor is a courageous 5-year-old from Illinois battling Ewing Sarcoma, a rare and aggressive cancer. After 15+ rounds of chemotherapy and a life-changing rotationplasty surgery, Connor continues to fight with incredible strength.',
+      help: 'Through the Five Time Foundation™, we’ve raised funds to bring Connor and his family to A Step Ahead Prosthetics, where he’ll receive a world-class prosthetic giving him the freedom to move, play, and just be a kid again.',
+      img: `https://drive.google.com/file/d/1647xRXtj6B8dneLd1maaHLxn52IH8Cjx/view?usp=sharing
+https://drive.google.com/file/d/1-QiPXG0l6xypZsDaE_AKgSJw41AJ5-gm/view?usp=sharing
+https://drive.google.com/file/d/1y2MlC-Z8rxYS8BxSbTOv40HpIW7Sd0CZ/view?usp=sharing
+https://drive.google.com/file/d/1qbxmxZ8PRGRKTG8RKTTxIqZ3GQlHFpnF/view?usp=sharing`
+    }
   ]);
 
   useEffect(() => {
@@ -622,6 +638,8 @@ export default function Home() {
         const founderTitleSizes = s(content.founderTitleSize || '60', 0.6, 32, 0.8, 44);
         const founderDescSizes = s(content.founderDescSize || '18', 0.85, 15, 0.95, 16);
         const storiesTitleSizes = s(content.storiesTitleSize || '64', 0.6, 32, 0.8, 48);
+        const storiesNameSizes = s(content.storiesNameSize || '48', 0.55, 28, 0.75, 40);
+        const storiesDescSizes = s(content.storiesDescSize || '20', 0.8, 15, 0.9, 16, 0.7, 14);
         const fundraisingTitleSizes = s(content.fundraisingTitleSize || '72', 0.5, 36, 0.75, 52);
         const fundraisingDescSizes = s(content.fundraisingDescSize || '20', 0.8, 16, 0.9, 18);
         const donationTitleSizes = s(content.donationTitleSize || '64', 0.6, 32, 0.8, 48);
@@ -643,6 +661,8 @@ export default function Home() {
             .s-founder-title { color: ${content.founderTitleColor || '#000000'} !important; font-size: ${founderTitleSizes.desktop}px !important; text-align: ${content.founderTitleAlign || 'left'} !important; font-weight: ${content.founderTitleBold !== false ? '900' : '400'} !important; }
             .s-founder-desc  { color: ${content.founderDescColor || '#4B5563'} !important; font-size: ${founderDescSizes.desktop}px !important; text-align: ${content.founderDescAlign || 'left'} !important; font-weight: ${content.founderDescBold ? '700' : '500'} !important; }
             .s-stories-title { color: ${content.storiesTitleColor || '#FFFFFF'} !important; font-size: ${storiesTitleSizes.desktop}px !important; text-align: ${content.storiesTitleAlign || 'center'} !important; font-weight: ${content.storiesTitleBold !== false ? '900' : '400'} !important; }
+            .s-stories-name { color: ${content.storiesNameColor || '#FFFFFF'} !important; font-size: ${storiesNameSizes.desktop}px !important; text-align: ${content.storiesNameAlign || 'left'} !important; font-weight: ${content.storiesNameBold !== false ? '900' : '400'} !important; }
+            .s-stories-desc { color: ${content.storiesDescColor || '#FFFFFF'} !important; font-size: ${storiesDescSizes.desktop}px !important; text-align: ${content.storiesDescAlign || 'left'} !important; font-weight: ${content.storiesDescBold ? '700' : '500'} !important; }
             .s-fundraising-title { color: ${content.fundraisingTitleColor || '#FFFFFF'} !important; font-size: ${fundraisingTitleSizes.desktop}px !important; text-align: ${content.fundraisingTitleAlign || 'center'} !important; font-weight: ${content.fundraisingTitleBold !== false ? '900' : '400'} !important; }
             .s-fundraising-desc  { color: ${content.fundraisingDescColor || '#9CA3AF'} !important; font-size: ${fundraisingDescSizes.desktop}px !important; text-align: ${content.fundraisingDescAlign || 'center'} !important; font-weight: ${content.fundraisingDescBold ? '700' : '500'} !important; }
             .s-donation-title { color: ${content.donationTitleColor || '#000000'} !important; font-size: ${donationTitleSizes.desktop}px !important; text-align: ${content.donationTitleAlign || 'center'} !important; font-weight: ${content.donationTitleBold !== false ? '900' : '400'} !important; }
@@ -659,6 +679,8 @@ export default function Home() {
               .s-founder-title { font-size: ${founderTitleSizes.tablet}px !important; }
               .s-founder-desc { font-size: ${founderDescSizes.tablet}px !important; }
               .s-stories-title { font-size: ${storiesTitleSizes.tablet}px !important; }
+              .s-stories-name { font-size: ${storiesNameSizes.tablet}px !important; }
+              .s-stories-desc { font-size: ${storiesDescSizes.tablet}px !important; }
               .s-fundraising-title { font-size: ${fundraisingTitleSizes.tablet}px !important; }
               .s-fundraising-desc { font-size: ${fundraisingDescSizes.tablet}px !important; }
               .s-donation-title { font-size: ${donationTitleSizes.tablet}px !important; }
@@ -677,6 +699,8 @@ export default function Home() {
               .s-founder-title { font-size: ${founderTitleSizes.mobile}px !important; text-align: center !important; }
               .s-founder-desc { font-size: ${founderDescSizes.mobile}px !important; text-align: center !important; }
               .s-stories-title { font-size: ${storiesTitleSizes.mobile}px !important; }
+              .s-stories-name { font-size: ${storiesNameSizes.mobile}px !important; }
+              .s-stories-desc { font-size: ${storiesDescSizes.mobile}px !important; text-align: center !important; }
               .s-fundraising-title { font-size: ${fundraisingTitleSizes.mobile}px !important; }
               .s-fundraising-desc { font-size: ${fundraisingDescSizes.mobile}px !important; }
               .s-donation-title { font-size: ${donationTitleSizes.mobile}px !important; }
@@ -688,6 +712,8 @@ export default function Home() {
               .s-hero-title { font-size: ${heroTitleSizes.phone}px !important; text-align: center !important; }
               .s-hero-desc { font-size: ${heroDescSizes.phone}px !important; text-align: center !important; }
               .s-hero-buttons { justify-content: center !important; }
+              .s-stories-name { font-size: ${storiesNameSizes.phone}px !important; text-align: center !important; }
+              .s-stories-desc { font-size: ${storiesDescSizes.phone}px !important; text-align: center !important; }
             }
           ` }} />
         );
@@ -787,14 +813,14 @@ export default function Home() {
               <motion.div 
                 key={currentHero}
                 style={{
-                  backgroundImage: `url(${heroImages[currentHero]})`,
-                  backgroundSize: 
+                  backgroundImage: heroImages[currentHero] ? `url(${heroImages[currentHero]})` : 'none',
+                  backgroundSize:
                     (content as any).hero_fit === 'fit' ? 'contain' :
                     (content as any).hero_fit === 'stretch' ? '100% 100%' :
                     (content as any).hero_fit === 'tile' || (content as any).hero_fit === 'title' ? 'auto' : 'cover',
-                  backgroundRepeat: 
+                  backgroundRepeat:
                     (content as any).hero_fit === 'tile' || (content as any).hero_fit === 'title' ? 'repeat' : 'no-repeat',
-                  backgroundPosition: 
+                  backgroundPosition:
                     (content as any).hero_fit === 'tile' || (content as any).hero_fit === 'title' ? 'top left' : 'center',
                 }}
                 initial={{ opacity: 0, scale: 1.05 }}
@@ -828,14 +854,14 @@ export default function Home() {
               <motion.div 
                 key={currentHero}
                 style={{
-                  backgroundImage: `url(${heroImages[currentHero]})`,
-                  backgroundSize: 
+                  backgroundImage: heroImages[currentHero] ? `url(${heroImages[currentHero]})` : 'none',
+                  backgroundSize:
                     (content as any).hero_fit === 'fit' ? 'contain' :
                     (content as any).hero_fit === 'stretch' ? '100% 100%' :
                     (content as any).hero_fit === 'tile' || (content as any).hero_fit === 'title' ? 'auto' : 'cover',
-                  backgroundRepeat: 
+                  backgroundRepeat:
                     (content as any).hero_fit === 'tile' || (content as any).hero_fit === 'title' ? 'repeat' : 'no-repeat',
-                  backgroundPosition: 
+                  backgroundPosition:
                     (content as any).hero_fit === 'tile' || (content as any).hero_fit === 'title' ? 'top left' : 'center',
                 }}
                 initial={{ opacity: 0, scale: 1.1 }}
@@ -1111,9 +1137,9 @@ export default function Home() {
                 <motion.div {...fadeInUp} className="flex-1 space-y-8">
                   <div className="space-y-4">
                     <h4 className="text-[10px] uppercase tracking-[0.6em] text-brand-blue font-black">Success Story</h4>
-                    <h3 className="text-5xl md:text-7xl font-black tracking-tighter italic text-white leading-none">{story.name}</h3>
+                    <h3 className="s-stories-name text-5xl md:text-7xl font-black tracking-tighter italic leading-none">{story.name}</h3>
                   </div>
-                  <div className="space-y-6 text-lg md:text-xl text-gray-400 leading-relaxed font-medium">
+                  <div className="space-y-6 s-stories-desc text-lg md:text-xl leading-relaxed font-medium">
                     <p>{story.journey}</p>
                     <div className="bg-white/5 p-10 rounded-3xl border-l-[6px] border-brand-blue">
                       <p className="text-white font-bold leading-loose">{story.help}</p>

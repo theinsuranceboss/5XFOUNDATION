@@ -84,9 +84,9 @@ export async function POST(req: NextRequest) {
           };
 
           try {
-            // Uncomment when ready to test real fulfillment
-            // await createPrintfulOrder(printfulOrder);
-            console.log('PRINTFUL ORDER DRAFTED:', JSON.stringify(printfulOrder, null, 2));
+            // Create the order in Printful for fulfillment
+            await createPrintfulOrder(printfulOrder);
+            console.log('PRINTFUL ORDER CREATED:', JSON.stringify(printfulOrder, null, 2));
             
             // Create Order and OrderItems in the SQLite database
             const email = session.customer_details?.email || null;

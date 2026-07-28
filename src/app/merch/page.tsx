@@ -24,9 +24,6 @@ export default function MerchPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Step 1: Trigger seeding on mount if database is empty
-        await fetch('/api/seed');
-
         // Step 1.5: Try loading cached dynamic configurations instantly
         try {
           const savedContent = localStorage.getItem('siteContent');

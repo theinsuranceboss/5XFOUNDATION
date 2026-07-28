@@ -10,67 +10,67 @@ datasource db {
 }
 
 model Category {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
-  slug      String   @unique
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  slug      String    @unique
+  order     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   products  Product[]
 }
 
 model Product {
-  id          String        @id @default(cuid())
-  syncId      String?       @unique
+  id          String           @id @default(cuid())
   title       String
   description String
   price       Float
   compareAt   Float?
   categoryId  String
-  category    Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  images      ProductImage[]
-  variants    ProductVariant[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  syncId      String?          @unique
   cartItems   CartItem[]
   orderItems  OrderItem[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  category    Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  images      ProductImage[]
+  variants    ProductVariant[]
 }
 
 model ProductImage {
   id        String  @id @default(cuid())
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   url       String
-  type      String  @default("front") // "front", "back", "gallery"
+  type      String  @default("front")
   order     Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model ProductVariant {
   id        String  @id @default(cuid())
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   color     String
   size      String
   stock     Int     @default(0)
   sku       String?
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model CartItem {
   id        String   @id @default(cuid())
   sessionId String
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   variantId String?
   color     String
   size      String
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model PaymentConfig {
   id        String   @id @default(cuid())
-  provider  String   @unique // "stripe", "paypal"
+  provider  String   @unique
   apiKey    String?
   link      String?
   isActive  Boolean  @default(false)
@@ -83,21 +83,21 @@ model Order {
   email     String?
   name      String?
   total     Float
-  status    String      @default("pending") // "pending", "completed", "failed"
+  status    String      @default("pending")
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   items     OrderItem[]
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   variantId String?
   color     String
   size      String
   quantity  Int
   price     Float
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }

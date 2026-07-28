@@ -233,6 +233,14 @@ export default function AdminDashboard() {
     storiesTitleSize: "64",
     storiesTitleAlign: "center",
     storiesTitleBold: true,
+    storiesNameColor: "#FFFFFF",
+    storiesNameSize: "48",
+    storiesNameAlign: "left",
+    storiesNameBold: true,
+    storiesDescColor: "#FFFFFF",
+    storiesDescSize: "20",
+    storiesDescAlign: "left",
+    storiesDescBold: false,
     fundraisingTitleColor: "#FFFFFF",
     fundraisingDescColor: "#9CA3AF",
     fundraisingTitleSize: "72",
@@ -764,9 +772,14 @@ export default function AdminDashboard() {
   });
 
   const [stories, setStories] = useState<any[]>([
-    { id: 'elena', name: 'Elena Rodriguez', tag: 'Outdoor Mentor', journey: 'Elena was diagnosed with osteosarcoma in her early 30s, which eventually led to an above-the-knee amputation. While she beat the cancer, the loss of her leg felt like the loss of her identity. High-performance "running blades" were financially out of reach, and she felt isolated from her old hiking groups.', help: 'The foundation provided Elena with a grant to cover the out-of-pocket costs for a specialized prosthetic limb designed for athletic activity. Beyond the hardware, Elena joined a 5X-sponsored community meet-up where she met other amputee athletes. Today, she isn\'t just walking; she’s mentoring other survivors on how to navigate local trails.', img: '/images/stories/elena.png' },
-    { id: 'marcus', name: 'Marcus Thorne', tag: 'Creative Force', journey: 'Marcus faced a rare soft-tissue sarcoma that resulted in the loss of his dominant arm. As a freelancer, the mounting care-related costs—travel for treatments, specialized physical therapy, and home modifications—began to overwhelm his family’s savings.', help: 'The 5X Foundation stepped in to ease the burden of care-related costs, allowing Marcus to focus on his rehabilitation without the looming threat of debt. Through the foundation’s community events, Marcus found a "supportive community grounded in purpose," eventually designing a limited-edition merchandise line for the foundation, which helped him reclaim his confidence as a creator.', img: '/images/stories/marcus.png' },
-    { id: 'chloe', name: 'Chloe Chen', tag: 'Academic Excellence', journey: 'Chloe was diagnosed with cancer during her sophomore year. The surgery to save her life resulted in limb loss, and she struggled with the "why me" of it all. She felt out of place on a college campus and worried that she would never have the stamina or the self-assurance to finish her degree.', help: 'Chloe attended a Five Time Foundation™ nightlife fundraiser, where she saw people celebrating life and strength despite their scars. The foundation’s "strength and perseverance" philosophy resonated with her. 5X helped facilitate a connection with a mentor—another survivor who had navigated the professional world with a prosthetic—giving Chloe the social and emotional "connection" she needed to return to school and graduate top of her class.', img: '/images/stories/chloe.png' },
+    {
+      id: 'connor',
+      name: 'Connor Young',
+      tag: 'Ewing Sarcoma Survivor',
+      journey: 'Connor is a courageous 5-year-old from Illinois battling Ewing Sarcoma, a rare and aggressive cancer. After 15+ rounds of chemotherapy and a life-changing rotationplasty surgery, Connor continues to fight with incredible strength.',
+      help: 'Through the Five Time Foundation™, we’ve raised funds to bring Connor and his family to A Step Ahead Prosthetics, where he’ll receive a world-class prosthetic giving him the freedom to move, play, and just be a kid again.',
+      img: 'https://drive.google.com/file/d/1647xRXtj6B8dneLd1maaHLxn52IH8Cjx/view?usp=sharing\nhttps://drive.google.com/file/d/1-QiPXG0l6xypZsDaE_AKgSJw41AJ5-gm/view?usp=sharing\nhttps://drive.google.com/file/d/1y2MlC-Z8rxYS8BxSbTOv40HpIW7Sd0CZ/view?usp=sharing\nhttps://drive.google.com/file/d/1qbxmxZ8PRGRKTG8RKTTxIqZ3GQlHFpnF/view?usp=sharing'
+    }
   ]);
 
   const [categories, setCategories] = useState(['T-Shirt', 'Hoodie', 'Accessory']);
@@ -3021,6 +3034,109 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
+                            {/* Name Customizer */}
+                            <div className="space-y-3 pt-3 border-t border-gray-100">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 block">Name Styling</span>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Color</label>
+                                  <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm">
+                                    <input
+                                      type="color"
+                                      className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                                      value={content.storiesNameColor || '#FFFFFF'}
+                                      onChange={(e) => setContent(prev => ({ ...prev, storiesNameColor: e.target.value }))}
+                                    />
+                                    <span className="text-[9px] font-mono text-gray-500 uppercase">{content.storiesNameColor || '#FFFFFF'}</span>
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Font Size ({content.storiesNameSize || '48'}px)</label>
+                                  <input
+                                    type="range"
+                                    min="12"
+                                    max="160"
+                                    className="w-full accent-brand-blue mt-2"
+                                    value={content.storiesNameSize || '48'}
+                                    onChange={(e) => setContent(prev => ({ ...prev, storiesNameSize: e.target.value }))}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Alignment</label>
+                                  <select
+                                    className="w-full text-xs bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm mt-1"
+                                    value={content.storiesNameAlign || 'left'}
+                                    onChange={(e) => setContent(prev => ({ ...prev, storiesNameAlign: e.target.value }))}
+                                  >
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                    <option value="justify">Justify</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 pt-1">
+                                <label className="text-[8px] font-black uppercase tracking-widest text-gray-400">Bold</label>
+                                <button
+                                  type="button"
+                                  onClick={() => setContent(prev => ({ ...prev, storiesNameBold: !prev.storiesNameBold }))}
+                                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${ content.storiesNameBold ? 'bg-brand-blue text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200' }`}
+                                >B</button>
+                              </div>
+                            </div>
+
+                            {/* Description Customizer */}
+                            <div className="space-y-3 pt-3 border-t border-gray-100">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 block">Description Styling</span>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Color</label>
+                                  <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm">
+                                    <input
+                                      type="color"
+                                      className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                                      value={content.storiesDescColor || '#FFFFFF'}
+                                      onChange={(e) => setContent(prev => ({ ...prev, storiesDescColor: e.target.value }))}
+                                    />
+                                    <span className="text-[9px] font-mono text-gray-500 uppercase">{content.storiesDescColor || '#FFFFFF'}</span>
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Font Size ({content.storiesDescSize || '20'}px)</label>
+                                  <input
+                                    type="range"
+                                    min="12"
+                                    max="64"
+                                    className="w-full accent-brand-blue mt-2"
+                                    value={content.storiesDescSize || '20'}
+                                    onChange={(e) => setContent(prev => ({ ...prev, storiesDescSize: e.target.value }))}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Alignment</label>
+                                  <select
+                                    className="w-full text-xs bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm mt-1"
+                                    value={content.storiesDescAlign || 'left'}
+                                    onChange={(e) => setContent(prev => ({ ...prev, storiesDescAlign: e.target.value }))}
+                                  >
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                    <option value="justify">Justify</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 pt-1">
+                                <label className="text-[8px] font-black uppercase tracking-widest text-gray-400">Bold</label>
+                                <button
+                                  type="button"
+                                  onClick={() => setContent(prev => ({ ...prev, storiesDescBold: !prev.storiesDescBold }))}
+                                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${ content.storiesDescBold ? 'bg-brand-blue text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200' }`}
+                                >B</button>
+                              </div>
+                            </div>
+                          </div>
+
                             {/* Section 6: Fundraising Section */}
                             <div className="bg-white p-6 rounded-3xl border border-gray-150 shadow-sm space-y-4">
                               <h6 className="text-[10px] font-black uppercase tracking-wider text-brand-blue">6. Fundraising Section</h6>
@@ -3496,7 +3612,6 @@ export default function AdminDashboard() {
                          </div>
                       </div>
                    </div>
-                </div>
               </motion.div>
             )}
 

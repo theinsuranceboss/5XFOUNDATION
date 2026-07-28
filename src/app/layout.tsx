@@ -8,6 +8,7 @@ import GlobalStyles from "@/components/GlobalStyles";
 import { CartSidebar } from "@/components/cart-sidebar";
 import { ProductDetail } from "@/components/product-detail";
 import { Toaster } from "@/components/ui/sonner";
+import { CartProvider } from "@/context/CartContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,17 +56,19 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans selection:bg-neon-green/30 selection:text-black">
-        <GlobalStyles />
-        <A11yAnnouncer />
-        <Navigation />
+        <CartProvider>
+          <GlobalStyles />
+          <A11yAnnouncer />
+          <Navigation />
 
-        <MainLayoutWrapper>
-          {children}
-        </MainLayoutWrapper>
-        <ProductDetail />
-        <CartSidebar />
-        <Toaster position="bottom-right" />
-        <Footer />
+          <MainLayoutWrapper>
+            {children}
+          </MainLayoutWrapper>
+          <ProductDetail />
+          <CartSidebar />
+          <Toaster position="bottom-right" />
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

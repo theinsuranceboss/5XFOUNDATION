@@ -12,13 +12,25 @@ const getHeaders = () => {
 };
 
 export async function fetchSyncProducts() {
-  const res = await fetch(`${PRINTFUL_API_URL}/sync/products`, {
-    headers: getHeaders(),
-    cache: 'no-store'
-  });
-  if (!res.ok) throw new Error(`Printful API Error: ${res.statusText}`);
-  const data = await res.json();
-  return data.result;
+  // Printful's GET /sync/products paginates via ?limit= (max 100) and ?offset=.
+  // Loop through every page so the entire store is synced, not just the first page.
+  const limit = 100;
+  let offset = 0;
+  const all: any[] = [];
+  let page: any[] = [];
+  do {
+    const res = await fetch(`${PRINTFUL_API_URL}/sync/products?limit=${limit}&offset=${offset}`, {
+      headers: getHeaders(),
+      cache: 'no-store'
+    });
+    if (!res.ok) throw new Error(`Printful API Error: ${res.statusText}`);
+    const data = await res.json();
+    // The endpoint returns an array of sync products (or { items: [...] } in some responses).
+    page = Array.isArray(data.result) ? data.result : (data.result?.items ?? []);
+    all.push(...page);
+    offset += limit;
+  } while (page.length === limit); // a full page means there may be more
+  return all;
 }
 
 export async function fetchProductDetails(id: number) {

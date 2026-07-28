@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'placeholder.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'files.cdn.printful.com',
+      },
     ],
   },
 };
