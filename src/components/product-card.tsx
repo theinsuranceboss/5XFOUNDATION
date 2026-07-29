@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Product } from '@/lib/store';
 import { motion } from 'framer-motion';
+import { getDisplayUrl } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -12,8 +13,11 @@ interface ProductCardProps {
 export function ProductCard({ product, onClick }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  const frontImage = product.images.find((img) => img.type === 'front')?.url || product.images[0]?.url;
-  const backImage = product.images.find((img) => img.type === 'back')?.url || frontImage;
+  const rawFront = product.images.find((img) => img.type === 'front')?.url || product.images[0]?.url;
+  const rawBack = product.images.find((img) => img.type === 'back')?.url || rawFront;
+
+  const frontImage = getDisplayUrl(rawFront);
+  const backImage = getDisplayUrl(rawBack);
 
   const minPrice = product.compareAt ? `From $${product.price.toFixed(2)} USD` : `$${product.price.toFixed(2)} USD`;
 

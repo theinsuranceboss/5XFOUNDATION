@@ -17,6 +17,22 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'files.cdn.printful.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'drive.google.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.in',
+      },
     ],
   },
   // Ensure prisma/dev.db binary is traced and bundled into the serverless function

@@ -17,6 +17,7 @@ import {
 import GlobalStyles from "@/components/GlobalStyles";
 import { useCart } from "@/context/CartContext";
 import { Product, ProductVariant, ProductImage } from "@/lib/store";
+import { getDisplayUrl } from "@/lib/utils";
 
 export default function ProductDetailPage({ params }: { params: any }) {
   const { addToCart } = useCart();
@@ -151,8 +152,8 @@ export default function ProductDetailPage({ params }: { params: any }) {
       url: img.url.startsWith('data:') || img.url.includes('?color=') ? img.url : `${img.url}?${colorParam}`
     }));
 
-  const frontImage = activeImage || imagesForColor.find((img: ProductImage) => img.type === 'front')?.url || imagesForColor[0]?.url || product.images[0]?.url;
-  const backImage = imagesForColor.find((img: ProductImage) => img.type === 'back')?.url || product.images.find((img: ProductImage) => img.type === 'back')?.url;
+  const frontImage = getDisplayUrl(activeImage || imagesForColor.find((img: ProductImage) => img.type === 'front')?.url || imagesForColor[0]?.url || product.images[0]?.url);
+  const backImage = getDisplayUrl(imagesForColor.find((img: ProductImage) => img.type === 'back')?.url || product.images.find((img: ProductImage) => img.type === 'back')?.url);
 
   return (
     <div className="min-h-screen bg-white text-black py-20 px-6 sm:px-12 lg:px-24">

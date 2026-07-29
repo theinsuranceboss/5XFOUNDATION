@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useStore, Product, Category, PaymentConfig } from '@/lib/store';
+import { getDisplayUrl } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -551,7 +552,7 @@ function InventoryTab({
           >
             {img.url ? (
               <>
-                <img src={img.url} alt="" className="h-full w-full object-contain transition-transform group-hover:scale-105" />
+                <img src={getDisplayUrl(img.url)} alt="" className="h-full w-full object-contain transition-transform group-hover:scale-105" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-semibold">
                   <Upload className="h-3.5 w-3.5 mr-1" />
                   Change
@@ -691,16 +692,37 @@ function InventoryTab({
               <Input
                 value={img.url}
                 onChange={(e) => {
+                  const val = e.target.value;
                   const newImgs = [...imageInputs];
-                  newImgs[idx] = { ...newImgs[idx], url: e.target.value };
+                  const transformed = getDisplayUrl(val);
+                  newImgs[idx] = { ...newImgs[idx], url: transformed || val };
                   setImageInputs(newImgs);
                 }}
-                placeholder="https://example.com/image.png"
+                onBlur={async (e) => {
+                  const val = e.target.value.trim();
+                  if (val.includes('drive.google.com') || val.includes('googleusercontent.com')) {
+                    try {
+                      const res = await fetch('/api/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gdriveUrl: val })
+                      });
+                      const data = await res.json();
+                      if (data.url) {
+                        const newImgs = [...imageInputs];
+                        newImgs[idx] = { ...newImgs[idx], url: data.url };
+                        setImageInputs([...newImgs]);
+                        toast.success('¡Enlace de Google Drive procesado!');
+                      }
+                    } catch (_) {}
+                  }
+                }}
+                placeholder="https://example.com/image.png o enlace de Google Drive"
                 className="h-8 text-xs bg-white border-gray-200 pr-7 font-mono truncate"
               />
               {img.url && (
                 <a 
-                  href={img.url} 
+                  href={getDisplayUrl(img.url)} 
                   target="_blank" 
                   rel="noreferrer" 
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
