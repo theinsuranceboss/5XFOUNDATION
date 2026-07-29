@@ -61,6 +61,12 @@ products_export.csv
 # Prisma generated client
 /src/generated/
 
+# Prisma local SQLite database
+prisma/dev.db
+prisma/dev.db-journal
+prisma/*.db
+prisma/*.db-journal
+
 # scratch directory
 /scratch/
 .git_new/
