@@ -8,7 +8,12 @@ import { AsyncLocalStorage } from 'async_hooks';
 export const batchUploadStorage = new AsyncLocalStorage<boolean>();
 
 // Determine if we are running inside a serverless environment (Netlify/Vercel/AWS Lambda)
-const isServerless = process.platform !== 'win32' || !!process.env.NETLIFY || !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.LAMBDA_TASK_ROOT;
+const isServerless =
+  process.platform !== 'win32' ||
+  !!process.env.NETLIFY ||
+  !!process.env.VERCEL ||
+  !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  !!process.env.LAMBDA_TASK_ROOT;
 
 // SQLite file path
 const dbPath = isServerless ? '/tmp/dev.db' : path.join(process.cwd(), 'prisma', 'dev.db');
@@ -20,83 +25,90 @@ process.env.DATABASE_URL = dbUrl;
 
 let lastCheckedTime = 0;
 
+/**
+ * Tries to copy the bundled dev.db to the target path.
+ * Returns true if successful.
+ */
+function copyBundledDb(targetPath: string): boolean {
+  // Multiple candidate locations — Netlify sets cwd to /var/task
+  const candidates = [
+    path.join(process.cwd(), 'prisma', 'dev.db'),
+    path.join(__dirname, '..', '..', 'prisma', 'dev.db'),
+    path.join(__dirname, '..', '..', '..', 'prisma', 'dev.db'),
+    path.join(__dirname, 'prisma', 'dev.db'),
+    '/var/task/prisma/dev.db',
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).size >= 10240) {
+        fs.copyFileSync(candidate, targetPath);
+        console.log(`[db.ts] Initialized ${targetPath} from bundled template: ${candidate}`);
+        return true;
+      }
+    } catch (_) { /* skip */ }
+  }
+
+  console.error(`[db.ts] No bundled dev.db template found. Tried: ${candidates.join(', ')}`);
+  return false;
+}
+
 // Helper to ensure database is downloaded locally from Supabase Storage
 export async function ensureDb() {
   if (isServerless) {
     const now = Date.now();
     const timeSinceLastCheck = now - lastCheckedTime;
-    
-    // Avoid checking Supabase Storage metadata more than once every 2 seconds
+
+    // Avoid re-checking Supabase more than once every 2 seconds
     if (fs.existsSync(dbPath) && fs.statSync(dbPath).size >= 10240 && timeSinceLastCheck < 2000) {
       return;
     }
-    
+
     lastCheckedTime = now;
     console.log(`[db.ts] Ensuring database is up-to-date at ${dbPath}...`);
-    
+
     const dir = path.dirname(dbPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
+    // If we already have a valid local copy, no need to re-download
+    if (fs.existsSync(dbPath) && fs.statSync(dbPath).size >= 10240) {
+      console.log(`[db.ts] Local database copy already exists and is valid.`);
+      return;
+    }
+
+    // Attempt to download from Supabase Storage
+    let downloadedFromSupabase = false;
     try {
-      // 1. Fetch remote dev.db metadata to check the updated_at timestamp
-      const { data: files, error: listError } = await supabase.storage
-        .from('5x_assets')
-        .list('', {
-          limit: 1,
-          search: 'dev.db'
-        });
+      console.log(`[db.ts] Attempting to download dev.db from Supabase Storage...`);
 
-      const remoteDb = files?.find(f => f.name === 'dev.db');
-      
-      let shouldDownload = true;
-      if (fs.existsSync(dbPath) && fs.statSync(dbPath).size >= 10240) {
-        shouldDownload = false;
-      }
-      
-      if (remoteDb && remoteDb.updated_at && fs.existsSync(dbPath) && !shouldDownload) {
-        const localMtime = fs.statSync(dbPath).mtimeMs;
-        const remoteMtime = new Date(remoteDb.updated_at).getTime();
-        
-        // Remote database is newer than the local database copy
-        if (remoteMtime > localMtime + 1000) { // 1s buffer
-          console.log(`[db.ts] Remote database is newer than local copy (remote: ${new Date(remoteMtime).toISOString()}, local: ${new Date(localMtime).toISOString()}). Will download...`);
-          shouldDownload = true;
-        }
-      }
+      const listResult = await supabase.storage.from('5x_assets').list('', { limit: 1, search: 'dev.db' });
+      const remoteDb = listResult.data?.find((f) => f.name === 'dev.db');
 
-      if (shouldDownload) {
-        if (remoteDb) {
-          console.log(`[db.ts] Downloading dev.db from Supabase Storage...`);
-          const { data, error } = await supabase.storage
-            .from('5x_assets')
-            .download('dev.db');
-
-          if (error) {
-            console.error(`[db.ts] Failed to download dev.db from Supabase Storage: ${error.message}`);
-          } else if (data) {
-            const buffer = Buffer.from(await data.arrayBuffer());
+      if (remoteDb) {
+        const { data, error } = await supabase.storage.from('5x_assets').download('dev.db');
+        if (!error && data) {
+          const buffer = Buffer.from(await data.arrayBuffer());
+          if (buffer.length >= 10240) {
             fs.writeFileSync(dbPath, buffer);
             console.log(`[db.ts] Downloaded dev.db from Supabase Storage (${buffer.length} bytes).`);
+            downloadedFromSupabase = true;
           }
         } else {
-          console.warn(`[db.ts] dev.db not found in Supabase Storage. Checking if local template exists...`);
-          // Use template relative to __dirname so Next.js static asset tracing bundles it
-          const templatePath = path.join(__dirname, '..', '..', 'prisma', 'dev.db');
-          if (fs.existsSync(templatePath)) {
-            fs.copyFileSync(templatePath, dbPath);
-            console.log(`[db.ts] Initialized ${dbPath} from local template.`);
-            await uploadDbToSupabase();
-          } else {
-            console.error(`[db.ts] Template database not found at ${templatePath}`);
-          }
+          console.warn(`[db.ts] Supabase download error: ${error?.message}`);
         }
       } else {
-        console.log(`[db.ts] Local database copy is up-to-date.`);
+        console.warn(`[db.ts] dev.db not found in Supabase Storage bucket.`);
       }
-    } catch (err) {
-      console.error("[db.ts] Error resolving database:", err);
+    } catch (err: any) {
+      console.warn(`[db.ts] Supabase Storage unavailable: ${err?.message || err}`);
+    }
+
+    // Fall back to bundled template when Supabase is unavailable
+    if (!downloadedFromSupabase) {
+      console.log(`[db.ts] Falling back to bundled dev.db template...`);
+      copyBundledDb(dbPath);
     }
   } else {
     // In local development, ensure the file is present
@@ -106,7 +118,7 @@ export async function ensureDb() {
   }
 }
 
-// Helper to upload SQLite database back to Supabase Storage
+// Helper to upload SQLite database back to Supabase Storage (best-effort)
 export async function uploadDbToSupabase() {
   if (!fs.existsSync(dbPath)) {
     console.warn(`[db.ts] Database file does not exist at ${dbPath}, skipping upload.`);
@@ -116,53 +128,36 @@ export async function uploadDbToSupabase() {
   try {
     console.log(`[db.ts] Uploading ${dbPath} to Supabase Storage bucket '5x_assets' as 'dev.db'...`);
     const buffer = fs.readFileSync(dbPath);
-    
-    const { error: uploadError } = await supabase.storage
-      .from('5x_assets')
-      .upload('dev.db', buffer, {
-        contentType: 'application/x-sqlite3',
-        upsert: true
-      });
+
+    const { error: uploadError } = await supabase.storage.from('5x_assets').upload('dev.db', buffer, {
+      contentType: 'application/x-sqlite3',
+      upsert: true,
+    });
 
     if (uploadError) {
-      console.warn(`[db.ts] Supabase upload failed, creating bucket '5x_assets' first: ${uploadError.message}`);
-      await supabase.storage.createBucket('5x_assets', { public: true });
-      
-      const { error: retryError } = await supabase.storage
-        .from('5x_assets')
-        .upload('dev.db', buffer, {
-          contentType: 'application/x-sqlite3',
-          upsert: true
-        });
-
-      if (retryError) {
-        console.error(`[db.ts] Failed to upload database on retry: ${retryError.message}`);
-      } else {
-        console.log(`[db.ts] Database successfully uploaded to Supabase on retry.`);
-        // Set last checked time to now to prevent immediate re-download
-        lastCheckedTime = Date.now();
-      }
+      console.warn(`[db.ts] Supabase upload failed: ${uploadError.message} — skipping.`);
     } else {
       console.log(`[db.ts] Database successfully uploaded to Supabase.`);
-      // Set last checked time to now to prevent immediate re-download
       lastCheckedTime = Date.now();
     }
   } catch (err) {
-    console.error("[db.ts] Error uploading database:", err);
+    console.warn('[db.ts] Error uploading database (non-fatal):', err);
   }
 }
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: any
+  prisma: any;
 };
 
-const basePrisma = globalForPrisma.prisma ?? new PrismaClient({
-  datasources: {
-    db: {
-      url: dbUrl,
+const basePrisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    datasources: {
+      db: {
+        url: dbUrl,
+      },
     },
-  },
-});
+  });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = basePrisma;
 
@@ -176,15 +171,16 @@ export const db = basePrisma.$extends({
       // Execute the database query
       const result = await query(args);
 
-      // If this query was a write mutation, upload the database back to Supabase
-      const isWrite = ['create', 'update', 'delete', 'updateMany', 'deleteMany', 'createMany', 'upsert'].includes(operation);
+      // If this query was a write mutation, upload the database back to Supabase (best-effort)
+      const isWrite = ['create', 'update', 'delete', 'updateMany', 'deleteMany', 'createMany', 'upsert'].includes(
+        operation
+      );
       const isBatch = batchUploadStorage.getStore() === true;
       if (isWrite && !isBatch) {
-        // Upload to Supabase Storage
-        await uploadDbToSupabase();
+        uploadDbToSupabase().catch((e) => console.warn('[db.ts] Background upload failed:', e?.message));
       }
 
       return result;
-    }
-  }
+    },
+  },
 });

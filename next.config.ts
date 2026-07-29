@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Ensure prisma/dev.db binary is traced and bundled into the serverless function
+  outputFileTracingIncludes: {
+    '/api/**': ['./prisma/dev.db'],
+    '/merch/**': ['./prisma/dev.db'],
+  },
 };
 
 export default nextConfig;
