@@ -140,14 +140,19 @@ export default function ProductDetailPage({ params }: { params: any }) {
   // Get images for selected color
   const colorParam = `color=${encodeURIComponent(selectedColor)}`;
   const imagesForColor = product.images
-    .filter((img: ProductImage) => img.url.includes(selectedColor) || img.type === 'front' || img.type === 'gallery')
+    .filter((img: ProductImage) => 
+      img.url.includes(selectedColor) || 
+      img.type === 'front' || 
+      img.type === 'back' || 
+      img.type === 'gallery'
+    )
     .map((img: ProductImage) => ({
       ...img,
-      url: img.url.includes('?color=') ? img.url : `${img.url}?${colorParam}`
+      url: img.url.startsWith('data:') || img.url.includes('?color=') ? img.url : `${img.url}?${colorParam}`
     }));
 
-  const frontImage = imagesForColor.find((img: ProductImage) => img.type === 'front')?.url || imagesForColor[0]?.url || product.images[0]?.url;
-  const backImage = imagesForColor.find((img: ProductImage) => img.type === 'back')?.url;
+  const frontImage = activeImage || imagesForColor.find((img: ProductImage) => img.type === 'front')?.url || imagesForColor[0]?.url || product.images[0]?.url;
+  const backImage = imagesForColor.find((img: ProductImage) => img.type === 'back')?.url || product.images.find((img: ProductImage) => img.type === 'back')?.url;
 
   return (
     <div className="min-h-screen bg-white text-black py-20 px-6 sm:px-12 lg:px-24">

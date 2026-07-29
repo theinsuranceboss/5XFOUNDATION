@@ -50,6 +50,7 @@ import {
   RefreshCw,
   Eye,
   Copy,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -449,13 +450,43 @@ function InventoryTab({
           setImageInputs(prev => [...prev, { url: data.url, type: defaultType, order: prev.length }]);
           toast.success('Image uploaded successfully!');
         } else {
-          toast.error('Failed to upload image.');
+          toast.error(data.error || 'Failed to upload image.');
         }
       } catch (err) {
         toast.error('Failed to upload image.');
       }
     };
     input.click();
+  };
+
+  const handleAddGoogleDriveLink = async (defaultType: string) => {
+    const inputUrl = prompt('Ingresa el enlace de Google Drive (Imagen o Carpeta) o URL directa:');
+    if (!inputUrl || !inputUrl.trim()) return;
+    toast.info('Procesando enlace de Google Drive...');
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gdriveUrl: inputUrl.trim() })
+      });
+      const data = await res.json();
+      if (data.url) {
+        setImageInputs(prev => [...prev, { url: data.url, type: defaultType, order: prev.length }]);
+        toast.success('¡Imagen procesada y añadida!');
+      } else if (data.images && Array.isArray(data.images)) {
+        const newEntries = data.images.map((u: string, idx: number) => ({
+          url: u,
+          type: defaultType,
+          order: imageInputs.length + idx
+        }));
+        setImageInputs(prev => [...prev, ...newEntries]);
+        toast.success(`¡Se añadieron ${newEntries.length} imágenes de Google Drive!`);
+      } else {
+        toast.error(data.error || 'No se pudo procesar el enlace.');
+      }
+    } catch (err: any) {
+      toast.error('Error al procesar el enlace.');
+    }
   };
 
   const handleDuplicateImage = (idx: number) => {
@@ -1202,15 +1233,33 @@ function InventoryTab({
                       </TabsList>
 
                       <div className="flex items-center gap-2">
-                        <TabsContent value="images" className="m-0 flex items-center gap-2">
+                        <TabsContent value="images" className="m-0 flex flex-wrap items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs h-9"
+                            className="text-xs h-9 font-semibold bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                             onClick={() => handleUploadNewImage('front')}
                           >
-                            <Upload className="mr-1.5 h-3.5 w-3.5" />
-                            Upload Image
+                            <Upload className="mr-1.5 h-3.5 w-3.5 text-blue-600" />
+                            Upload Front
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-9 font-semibold bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                            onClick={() => handleUploadNewImage('back')}
+                          >
+                            <Upload className="mr-1.5 h-3.5 w-3.5 text-purple-600" />
+                            Upload Back Image
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-9 font-semibold bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                            onClick={() => handleAddGoogleDriveLink('back')}
+                          >
+                            <LinkIcon className="mr-1.5 h-3.5 w-3.5 text-green-600" />
+                            Google Drive Link
                           </Button>
                           <Button
                             variant="outline"
