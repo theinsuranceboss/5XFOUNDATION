@@ -880,8 +880,9 @@ export default function AdminDashboard() {
     const formData = new FormData();
     formData.append('file', file);
     
-    // Direct link to the asset name
-    formData.append('name', `${id}.png`);
+    // Use unique name per upload: id + timestamp + original extension
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    formData.append('name', `${id}-${Date.now()}.${fileExt}`);
 
     setIsSaving(true);
     try {
@@ -929,8 +930,9 @@ export default function AdminDashboard() {
           const newStories = stories.map(s => {
             if (s.id === id) {
               const currentImg = s.img || "";
-              const isLegacy = currentImg.trim() === "" || currentImg.startsWith("/placeholder.png") || currentImg.startsWith("/images/stories/");
-              const updatedImg = isLegacy ? returnedUrl : `${currentImg}\n${returnedUrl}`;
+              // Only treat as empty/legacy if it has no content or is the generic placeholder
+              const isEmptyOrPlaceholder = !currentImg.trim() || currentImg.trim() === "/placeholder.png";
+              const updatedImg = isEmptyOrPlaceholder ? returnedUrl : `${currentImg}\n${returnedUrl}`;
               return { ...s, img: updatedImg };
             }
             return s;
@@ -2221,17 +2223,48 @@ export default function AdminDashboard() {
                               <StoryImagePreview source={story.img} name={story.name} />
                               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all">
                                   <Upload className="text-white mb-2" size={24} />
-                                  <span className="text-white text-[8px] font-black uppercase tracking-widest">Replace/Add Photo</span>
+                                  <span className="text-white text-[8px] font-black uppercase tracking-widest">Upload Photo</span>
                               </div>
                             </div>
 
+                            <button
+                               type="button"
+                               onClick={() => {
+                                 const input = document.getElementById('image-upload') as any;
+                                 input.dataset.currentId = story.id;
+                                 input.click();
+                               }}
+                               className="w-full bg-brand-blue text-white py-2.5 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-brand-blue/90 transition-all shadow-sm"
+                             >
+                               <Upload size={12} /> Upload Image to Supabase
+                             </button>
+
                             <div className="space-y-1">
-                              <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-gray-400">Story Images (Google Drive Folder or List of URLs)</label>
+                              <div className="flex items-center justify-between">
+                                 <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-gray-400">Story Images (URLs – one per line)</label>
+                                 <button
+                                   type="button"
+                                   title="Clear all image URLs"
+                                   onClick={() => {
+                                     if (confirm('Clear all image URLs for this story? You can then upload new photos.')) {
+                                       const updatedStories = stories.map(s =>
+                                         s.id === story.id ? { ...s, img: '' } : s
+                                       );
+                                       setStories(updatedStories);
+                                       updateSiteContent('siteStories', JSON.stringify(updatedStories));
+                                       localStorage.setItem('siteStories', JSON.stringify(updatedStories));
+                                     }
+                                   }}
+                                   className="text-[8px] text-red-400 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors"
+                                 >
+                                   <Trash2 size={9} /> Clear
+                                 </button>
+                               </div>
                               <textarea 
                                 rows={3}
                                 className="w-full bg-gray-50 px-4 py-2 rounded-xl font-medium text-xs border border-gray-100 focus:ring-2 focus:ring-brand-blue transition-all"
                                 value={story.img}
-                                placeholder="Paste Google Drive folder link, file links (one per line), or upload..."
+                                placeholder="Upload photos above, or paste direct image URLs here (one per line)..."
                                 onChange={(e) => {
                                   const val = e.target.value;
                                   setStories(prev => prev.map(s => 
@@ -4996,9 +5029,7 @@ function GDriveFolderTester({
     setTesting(false);
   }, [folderUrl]);
 
-  useEffect(() => {
-    handleTest();
-  }, [handleTest]);
+  // NOTE: No auto-load on mount. Images only load when user clicks "Refresh Images".
 
   return (
     <div className="bg-brand-gray/40 border border-gray-200/50 rounded-2xl p-6 space-y-4">
