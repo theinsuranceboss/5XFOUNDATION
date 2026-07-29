@@ -169,7 +169,7 @@ export default function ImpactPage() {
               <div className="w-full md:w-1/2 space-y-8">
                 <Quote className="text-brand-blue/20" size={80} fill="currentColor" />
                 <h3 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">
-                  "{story.story}"
+                  "{story.journey}"
                 </h3>
                 <div className="pt-8 border-t border-gray-100 flex items-center justify-between">
                   <div>
