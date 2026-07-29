@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
       const uploadUrl = await convexClient.mutation(api.upload.generateUploadUrl);
       const formData = new FormData();
-      formData.append("file", new Blob([optBuffer], { type: "image/webp" }));
+      formData.append("file", new Blob([new Uint8Array(optBuffer)], { type: "image/webp" }));
 
       const uploadRes = await fetch(uploadUrl, { method: "POST", body: formData });
       const uploadResult = await uploadRes.json();
