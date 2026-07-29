@@ -50,6 +50,10 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  // Disable Turbopack to avoid issues with custom webpack config
+  turbopack: {
+    resolveAlias: {},
+  },
 };
 
 export default nextConfig;
