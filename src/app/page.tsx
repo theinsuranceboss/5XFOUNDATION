@@ -471,10 +471,10 @@ export default function Home() {
       tag: 'Ewing Sarcoma Survivor',
       journey: 'Connor is a courageous 5-year-old from Illinois battling Ewing Sarcoma, a rare and aggressive cancer. After 15+ rounds of chemotherapy and a life-changing rotationplasty surgery, Connor continues to fight with incredible strength.',
       help: 'Through the Five Time Foundation™, we’ve raised funds to bring Connor and his family to A Step Ahead Prosthetics, where he’ll receive a world-class prosthetic giving him the freedom to move, play, and just be a kid again.',
-      img: `https://drive.google.com/file/d/1647xRXtj6B8dneLd1maaHLxn52IH8Cjx/view?usp=sharing
-https://drive.google.com/file/d/1-QiPXG0l6xypZsDaE_AKgSJw41AJ5-gm/view?usp=sharing
-https://drive.google.com/file/d/1y2MlC-Z8rxYS8BxSbTOv40HpIW7Sd0CZ/view?usp=sharing
-https://drive.google.com/file/d/1qbxmxZ8PRGRKTG8RKTTxIqZ3GQlHFpnF/view?usp=sharing`
+      img: `/images/stories/connor_1.jpg
+/images/stories/connor_2.jpg
+/images/stories/connor_3.jpg
+/images/stories/connor_4.jpg`
     }
   ]);
 

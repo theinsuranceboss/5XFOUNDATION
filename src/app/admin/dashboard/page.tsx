@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -778,7 +778,7 @@ export default function AdminDashboard() {
       tag: 'Ewing Sarcoma Survivor',
       journey: 'Connor is a courageous 5-year-old from Illinois battling Ewing Sarcoma, a rare and aggressive cancer. After 15+ rounds of chemotherapy and a life-changing rotationplasty surgery, Connor continues to fight with incredible strength.',
       help: 'Through the Five Time Foundation™, we’ve raised funds to bring Connor and his family to A Step Ahead Prosthetics, where he’ll receive a world-class prosthetic giving him the freedom to move, play, and just be a kid again.',
-      img: 'https://drive.google.com/file/d/1647xRXtj6B8dneLd1maaHLxn52IH8Cjx/view?usp=sharing\nhttps://drive.google.com/file/d/1-QiPXG0l6xypZsDaE_AKgSJw41AJ5-gm/view?usp=sharing\nhttps://drive.google.com/file/d/1y2MlC-Z8rxYS8BxSbTOv40HpIW7Sd0CZ/view?usp=sharing\nhttps://drive.google.com/file/d/1qbxmxZ8PRGRKTG8RKTTxIqZ3GQlHFpnF/view?usp=sharing'
+      img: '/images/stories/connor_1.jpg\n/images/stories/connor_2.jpg\n/images/stories/connor_3.jpg\n/images/stories/connor_4.jpg'
     }
   ]);
 
@@ -2298,9 +2298,31 @@ export default function AdminDashboard() {
                           </div>
                        </div>
 
-                       {/* Real-time Fetch Tester for Survivor Story */}
+                       {/* Real-time Fetch Tester & Image Manager for Survivor Story */}
                        <div className="border-t border-gray-100 pt-6">
-                          <GDriveFolderTester folderUrl={story.img} />
+                          <GDriveFolderTester 
+                            folderUrl={story.img} 
+                            onRemoveImage={(imgIdx, imgUrl) => {
+                              const lines = (story.img || "")
+                                .split(/[\n,]/)
+                                .map((l: string) => l.trim())
+                                .filter((l: string) => l.length > 0);
+                              
+                              const updatedLines = lines.filter((l: string, i: number) => {
+                                if (lines.length > imgIdx) return i !== imgIdx;
+                                return l !== imgUrl;
+                              });
+
+                              const updatedImg = updatedLines.join('\n');
+                              const updatedStories = stories.map((s, sIdx) => 
+                                sIdx === idx ? { ...s, img: updatedImg } : s
+                              );
+
+                              setStories(updatedStories);
+                              updateSiteContent('siteStories', JSON.stringify(updatedStories));
+                              localStorage.setItem('siteStories', JSON.stringify(updatedStories));
+                            }}
+                          />
                        </div>
                     </div>
                   ))}
@@ -4917,57 +4939,73 @@ export default function AdminDashboard() {
   );
 }
 
-function GDriveFolderTester({ folderUrl }: { folderUrl: string }) {
+function GDriveFolderTester({ 
+  folderUrl, 
+  onRemoveImage 
+}: { 
+  folderUrl: string; 
+  onRemoveImage?: (index: number, url: string) => void;
+}) {
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; images?: string[]; error?: string } | null>(null);
 
-  const handleTest = async () => {
-    setTesting(true);
-    setResult(null);
-
-    const folderIdMatch = folderUrl.match(/(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/);
-    if (!folderIdMatch) {
-      // Not a google drive folder link, check if it is a list of links
-      const links = folderUrl
-        .split(/[\n,]/)
-        .map(l => l.trim())
-        .filter(l => l.length > 0);
-      
-      if (links.length > 0) {
-        // Render custom list preview
-        const converted = links.map(l => {
-          const fileMatch = l.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
-          if (fileMatch) {
-            return `/api/gdrive/image?id=${fileMatch[1]}&v=3`;
-          }
-          return l;
-        });
-        setResult({ success: true, images: converted });
-      } else {
-        setResult({ success: false, error: "Please enter a valid Google Drive Folder URL or a list of direct image URLs (one per line)." });
-      }
-      setTesting(false);
+  const handleTest = useCallback(async () => {
+    if (!folderUrl || !folderUrl.trim()) {
+      setResult(null);
       return;
     }
+    setTesting(true);
 
-    const folderId = folderIdMatch[1];
-    try {
-      const res = await fetch(`/api/gdrive?folderId=${folderId}`);
-      const data = await res.json();
-      setResult(data);
-    } catch (err: any) {
-      setResult({ success: false, error: err.message || "Failed to make test request." });
-    } finally {
-      setTesting(false);
+    const folderIdMatch = folderUrl.match(/(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/);
+    let driveImages: string[] = [];
+
+    if (folderIdMatch) {
+      const folderId = folderIdMatch[1];
+      try {
+        const res = await fetch(`/api/gdrive?folderId=${folderId}`);
+        const data = await res.json();
+        if (data.success && data.images && data.images.length > 0) {
+          driveImages = data.images;
+        }
+      } catch (err: any) {
+        console.warn("[GDriveFolderTester] Fetch error:", err);
+      }
     }
-  };
+
+    const manualLinks = folderUrl
+      .split(/[\n,]/)
+      .map(l => l.trim())
+      .filter(l => l.length > 0 && !l.includes('drive.google.com/drive/folders'))
+      .map(l => {
+        const fileMatch = l.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
+        if (fileMatch) {
+          return `/api/gdrive/image?id=${fileMatch[1]}&v=3`;
+        }
+        return l;
+      });
+
+    const combinedImages = Array.from(new Set([...driveImages, ...manualLinks]));
+
+    if (combinedImages.length > 0) {
+      setResult({ success: true, images: combinedImages });
+    } else if (folderIdMatch) {
+      setResult({ success: false, error: "Could not auto-fetch images from Google Drive folder link. Please ensure sharing is set to 'Anyone with the link can view' or use direct image links/file uploads." });
+    } else {
+      setResult({ success: false, error: "Please enter a valid Google Drive Folder URL or direct image URLs." });
+    }
+    setTesting(false);
+  }, [folderUrl]);
+
+  useEffect(() => {
+    handleTest();
+  }, [handleTest]);
 
   return (
     <div className="bg-brand-gray/40 border border-gray-200/50 rounded-2xl p-6 space-y-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div className="space-y-1">
-          <h6 className="text-xs font-black uppercase tracking-wider text-gray-500">Live Integration Status</h6>
-          <p className="text-[10px] text-gray-400 font-medium">Verify folder accessibility or custom links instantly.</p>
+          <h6 className="text-xs font-black uppercase tracking-wider text-gray-500">Live Integration & Image Manager</h6>
+          <p className="text-[10px] text-gray-400 font-medium">View, manage, and delete story images in real time.</p>
         </div>
         <button
           type="button"
@@ -4975,7 +5013,7 @@ function GDriveFolderTester({ folderUrl }: { folderUrl: string }) {
           disabled={testing}
           className="bg-brand-blue text-white px-5 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase hover:bg-brand-blue/90 transition-all disabled:opacity-50 flex items-center gap-2 self-start sm:self-auto shadow-sm"
         >
-          {testing ? "Testing Link..." : "Verify & Fetch Images"}
+          {testing ? "Refreshing..." : "Refresh Images"}
         </button>
       </div>
 
@@ -4987,16 +5025,23 @@ function GDriveFolderTester({ folderUrl }: { folderUrl: string }) {
                 <span className="w-2 h-2 bg-green-500 rounded-full" />
                 Successfully loaded {result.images?.length || 0} slide images!
               </div>
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-                {result.images?.slice(0, 12).map((url, i) => (
-                  <div key={i} className="aspect-square relative bg-black rounded-lg overflow-hidden border border-gray-100 group/thumb shadow-sm">
-                    <img src={url} alt={`Slide ${i + 1}`} className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-300" />
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                {result.images?.map((url, i) => (
+                  <div key={i} className="aspect-square relative bg-gray-900 rounded-xl overflow-hidden border border-gray-200 group/thumb shadow-sm">
+                    <img src={url} alt={`Slide ${i + 1}`} className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300" />
+                    {onRemoveImage && (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveImage(i, url)}
+                        title="Delete Image"
+                        className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow-lg opacity-90 sm:opacity-0 group-hover/thumb:opacity-100 transition-all hover:scale-110 z-20 cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
-              {(result.images?.length || 0) > 12 && (
-                <p className="text-[10px] text-gray-400 font-medium">+ {(result.images?.length || 0) - 12} more images loaded.</p>
-              )}
             </div>
           ) : (
             <div className="text-red-500 font-medium text-xs bg-red-50 border border-red-100 p-4 rounded-xl space-y-2">
