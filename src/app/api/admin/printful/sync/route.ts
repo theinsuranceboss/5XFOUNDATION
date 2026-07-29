@@ -37,22 +37,22 @@ export async function POST() {
     const successCount = await batchUploadStorage.run(true, async () => {
       const products = await fetchSyncProducts();
       let count = 0;
-  
+
       for (const p of products) {
         const details = await fetchProductDetails(p.id);
-        
+
         const title = details.sync_product.name;
         const images: { url: string, type: string }[] = [];
         const variants: any[] = [];
         let basePrice = 0.01;
-  
+
         // Determine category based on first variant main_category_id
         const firstVariant = details.sync_variants[0] || {};
         const categoryIdVal = firstVariant.main_category_id;
-        
+
         let catName = 'Apparel';
         let catSlug = 'apparel';
-        
+
         if (categoryIdVal === 41) {
           catName = 'Hats';
           catSlug = 'hats';
@@ -69,7 +69,7 @@ export async function POST() {
           catName = 'T-Shirts';
           catSlug = 't-shirts';
         }
-        
+
         let productCategory = await db.category.findUnique({ where: { slug: catSlug } });
         if (!productCategory) {
           productCategory = await db.category.create({
@@ -80,27 +80,27 @@ export async function POST() {
             }
           });
         }
-  
+
         // Extract variants and images
         details.sync_variants.forEach((v: any) => {
           // Find price
           const price = parseFloat(v.retail_price);
           if (!isNaN(price) && price > 0) basePrice = price;
-  
+
           // Use direct color and size fields from Printful
           const color = (v.color || 'Default').trim();
           const size = (v.size || 'One Size').trim();
-  
+
           // Format color field with hex name (colorName|hexValue)
           const formattedColor = `${color}|${getColorHex(color)}`;
-  
+
           variants.push({
             color: formattedColor,
             size,
             sku: v.sku,
             stock: 999 // Printful is made-to-order
           });
-  
+
           // Extract mockups and back designs
           v.files.forEach((f: any) => {
             if ((f.type === 'preview' || f.type === 'mockup' || f.type === 'back') && f.preview_url) {
@@ -112,7 +112,7 @@ export async function POST() {
             }
           });
         });
-  
+
         // Insert or Update DB
         let existingProduct = await db.product.findFirst({
           where: {
@@ -122,7 +122,7 @@ export async function POST() {
             ]
           }
         });
-  
+
         if (existingProduct) {
           // Update product price, title, categoryId & set syncId
           await db.product.update({
@@ -184,7 +184,7 @@ export async function POST() {
               }
             });
           }
-    
+
           // Insert fresh variants sequentially (only for brand new products)
           for (const variant of variants) {
             await db.productVariant.create({
@@ -198,7 +198,7 @@ export async function POST() {
             });
           }
         }
-  
+
         count++;
       }
       return count;
@@ -206,7 +206,7 @@ export async function POST() {
 
     // 3. Upload the fully updated SQLite database file exactly once back to Supabase
     await uploadDbToSupabase();
-  
+
     return NextResponse.json({ success: true, synced: successCount });
   } catch (error: any) {
     console.error('Printful sync error:', error);

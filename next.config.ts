@@ -40,6 +40,16 @@ const nextConfig: NextConfig = {
     '/api/**': ['./prisma/dev.db'],
     '/merch/**': ['./prisma/dev.db'],
   },
+  // Exclude sharp from server bundle to avoid native module issues on Windows
+  serverExternalPackages: ['sharp'],
+  // Use webpack for production builds to avoid Turbopack/sharp issues on Windows
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('sharp');
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
