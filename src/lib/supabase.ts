@@ -1,56 +1,41 @@
-import { createClient } from '@supabase/supabase-js'
+import { convexClient } from "./convex";
+import { api } from "@convex/_generated/api";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-
-// CMS Helper functions
+// CMS Helper functions using Convex
 export async function getSiteContent(key: string) {
-  const { data, error } = await supabase
-    .from('site_content')
-    .select('content')
-    .eq('section_key', key)
-    .maybeSingle()
-  
-  if (error || !data) return null
-  return data.content
+  try {
+    const content = await convexClient.query(api.siteContent.get, { key });
+    return content;
+  } catch (err) {
+    console.error("Failed to get site content from Convex:", err);
+    return null;
+  }
 }
 
 export async function updateSiteContent(key: string, content: string) {
-  const { error } = await supabase
-    .from('site_content')
-    .upsert(
-      { section_key: key, content, updated_at: new Date().toISOString() },
-      { onConflict: 'section_key' }
-    )
-  
-  return { success: !error, error }
+  try {
+    await convexClient.mutation(api.siteContent.upsert, { key, content });
+    return { success: true, error: null };
+  } catch (err: any) {
+    console.error("Failed to update site content in Convex:", err);
+    return { success: false, error: err };
+  }
 }
 
-export async function getActiveAds(location: 'footer' | 'sidebar') {
-  const { data, error } = await supabase
-    .from('ad_banners')
-    .select('*')
-    .eq('location', location)
-    .eq('active', true)
-  
-  return { data, error }
+export async function getActiveAds(location: "footer" | "sidebar") {
+  try {
+    const data = await convexClient.query(api.ads.getActive, { location });
+    return { data, error: null };
+  } catch (err: any) {
+    return { data: null, error: err };
+  }
 }
 
 export async function recordAdClick(adId: string) {
-  // Use RPC for atomic increment if available, or fetch and update
-  const { error } = await supabase.rpc('increment_ad_clicks', { ad_id: adId })
-  return { error }
+  try {
+    await convexClient.mutation(api.ads.recordClick, { adId: adId as any });
+    return { error: null };
+  } catch (err: any) {
+    return { error: err };
+  }
 }
-
-// Types for the database
-export type SiteContent = {
-  id: string
-  section_key: string
-  content: string
-  updated_at: string
-}
-// ... [rest of types]
-

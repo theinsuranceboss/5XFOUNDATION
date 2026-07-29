@@ -1,15 +1,12 @@
-import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { convexClient } from '@/lib/convex';
+import { api } from '@convex/_generated/api';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const categories = await db.category.findMany({
-      orderBy: { order: 'asc' },
-      include: { _count: { select: { products: true } } },
-    });
-
+    const categories = await convexClient.query(api.categories.list);
     return NextResponse.json(categories);
   } catch (error) {
     console.error('Error fetching categories:', error);

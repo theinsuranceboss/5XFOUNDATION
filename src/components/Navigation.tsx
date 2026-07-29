@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingBag, ShieldCheck } from "lucide-react";
+import { Menu, X, ShoppingBag } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getSiteContent } from "@/lib/supabase";
@@ -93,16 +93,8 @@ export default function Navigation() {
           ))}
         </div>
 
-        {/* Icons & Admin */}
+        {/* Icons */}
         <div className="flex items-center gap-6">
-          <Link 
-            href="/admin/dashboard" 
-            className="hidden md:flex items-center gap-2 text-[10px] font-black tracking-widest text-gray-400 hover:text-black transition-colors"
-          >
-            <ShieldCheck size={16} />
-            ADMIN PORTAL
-          </Link>
-          
           <button 
             onClick={toggleCart} 
             className="nav-cart-btn text-black hover:text-brand-blue transition-colors relative focus:outline-none p-1"
@@ -145,14 +137,6 @@ export default function Navigation() {
                 {item.name}
               </Link>
             ))}
-            <Link
-              href="/admin/dashboard"
-              onClick={() => setIsOpen(false)}
-              className="text-sm font-black tracking-widest text-gray-400 flex items-center gap-2 border-t pt-4"
-            >
-              <ShieldCheck size={18} />
-              ADMIN PORTAL
-            </Link>
           </motion.div>
         )}
       </AnimatePresence>

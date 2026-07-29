@@ -1,5 +1,6 @@
-import { db, batchUploadStorage, uploadDbToSupabase } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { convexClient } from '@/lib/convex';
+import { api } from '@convex/_generated/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,38 +8,37 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { title, description, price, compareAt, categoryId, images, variants } = body;
-
     if (!title || !description || !price || !categoryId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const product = await db.product.create({
-      data: {
-        title,
-        description,
-        price: parseFloat(price),
-        compareAt: compareAt ? parseFloat(compareAt) : null,
-        categoryId,
-        images: {
-          create: (images || []).map((img: { url: string; type: string; order: number }) => ({
-            url: img.url,
-            type: img.type,
-            order: img.order,
-          })),
-        },
-        variants: {
-          create: (variants || []).map((v: { color: string; size: string; stock: number; sku?: string }) => ({
-            color: v.color,
-            size: v.size,
-            stock: parseInt(String(v.stock)) || 0,
-            sku: v.sku || null,
-          })),
-        },
-      },
-      include: { category: true, images: true, variants: true },
+    const productId = await convexClient.mutation(api.products.create, {
+      title,
+      description,
+      price: parseFloat(price),
+      compareAt: compareAt ? parseFloat(compareAt) : undefined,
+      categoryId: categoryId as any,
     });
 
-    return NextResponse.json(product);
+    for (const img of (images || [])) {
+      await convexClient.mutation(api.products.addImage, {
+        productId: productId as any,
+        url: img.url,
+        type: img.type,
+        order: img.order,
+      });
+    }
+    for (const v of (variants || [])) {
+      await convexClient.mutation(api.products.addVariant, {
+        productId: productId as any,
+        color: v.color,
+        size: v.size,
+        stock: parseInt(String(v.stock)) || 0,
+        sku: v.sku || undefined,
+      });
+    }
+
+    return NextResponse.json({ id: productId, success: true });
   } catch (error) {
     console.error('Error creating product:', error);
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
@@ -49,48 +49,41 @@ export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
     const { id, title, description, price, compareAt, categoryId, images, variants } = body;
-
     if (!id) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    const product = await batchUploadStorage.run(true, async () => {
-      // Delete existing images and variants, then recreate
-      await db.productImage.deleteMany({ where: { productId: id } });
-      await db.productVariant.deleteMany({ where: { productId: id } });
-
-      return db.product.update({
-        where: { id },
-        data: {
-          title,
-          description,
-          price: parseFloat(price),
-          compareAt: compareAt ? parseFloat(compareAt) : null,
-          categoryId,
-          images: {
-            create: (images || []).map((img: { url: string; type: string; order: number }) => ({
-              url: img.url,
-              type: img.type,
-              order: img.order,
-            })),
-          },
-          variants: {
-            create: (variants || []).map((v: { color: string; size: string; stock: number; sku?: string }) => ({
-              color: v.color,
-              size: v.size,
-              stock: parseInt(String(v.stock)) || 0,
-              sku: v.sku || null,
-            })),
-          },
-        },
-        include: { category: true, images: true, variants: true },
-      });
+    await convexClient.mutation(api.products.update, {
+      id: id as any,
+      title,
+      description,
+      price: parseFloat(price),
+      compareAt: compareAt ? parseFloat(compareAt) : undefined,
+      categoryId: categoryId as any,
     });
 
-    // Upload the final SQLite file once to Supabase Storage
-    await uploadDbToSupabase();
+    await convexClient.mutation(api.products.removeAllImages, { productId: id as any });
+    await convexClient.mutation(api.products.removeAllVariants, { productId: id as any });
 
-    return NextResponse.json(product);
+    for (const img of (images || [])) {
+      await convexClient.mutation(api.products.addImage, {
+        productId: id as any,
+        url: img.url,
+        type: img.type,
+        order: img.order,
+      });
+    }
+    for (const v of (variants || [])) {
+      await convexClient.mutation(api.products.addVariant, {
+        productId: id as any,
+        color: v.color,
+        size: v.size,
+        stock: parseInt(String(v.stock)) || 0,
+        sku: v.sku || undefined,
+      });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating product:', error);
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
@@ -101,20 +94,10 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
-
     if (!id) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
-
-    await batchUploadStorage.run(true, async () => {
-      await db.productImage.deleteMany({ where: { productId: id } });
-      await db.productVariant.deleteMany({ where: { productId: id } });
-      await db.product.delete({ where: { id } });
-    });
-
-    // Upload the final SQLite file once to Supabase Storage
-    await uploadDbToSupabase();
-
+    await convexClient.mutation(api.products.remove, { id: id as any });
     return NextResponse.json({ deleted: true });
   } catch (error) {
     console.error('Error deleting product:', error);

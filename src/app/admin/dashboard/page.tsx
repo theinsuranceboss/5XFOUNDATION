@@ -100,7 +100,7 @@ function StoryImagePreview({ source, name }: { source: string; name: string }) {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'content' | 'ads' | 'events' | 'merch' | 'who_we_help' | 'media' | 'theme' | 'donations'>('media');
+  const [activeTab, setActiveTab] = useState<'content' | 'ads' | 'events' | 'merch' | 'who_we_help' | 'media' | 'theme' | 'donations' | 'settings'>('media');
   const [isSaving, setIsSaving] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -1099,6 +1099,7 @@ export default function AdminDashboard() {
             { id: 'merch', icon: <Tag size={18} />, label: 'Shop Pricing' },
             { id: 'theme', icon: <Layout size={18} />, label: 'Theme Settings' },
             { id: 'ads', icon: <Sliders size={18} />, label: 'Advertisement' },
+            { id: 'settings', icon: <Settings size={18} />, label: 'Settings' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -4675,6 +4676,76 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+              </motion.div>
+            )}
+
+            {activeTab === 'settings' && (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+              >
+                <div className="bg-gradient-to-r from-brand-blue to-purple-600 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent)] pointer-events-none" />
+                  <div className="relative z-10 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Settings size={24} />
+                      <h2 className="text-3xl font-black tracking-tight">Admin Settings</h2>
+                    </div>
+                    <p className="text-sm text-white/80">Change your admin password below.</p>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-lg max-w-lg">
+                  <h3 className="text-lg font-black tracking-tight mb-6">Change Password</h3>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const form = e.target as HTMLFormElement;
+                    const oldPw = (form.elements.namedItem('oldPassword') as HTMLInputElement).value;
+                    const newPw = (form.elements.namedItem('newPassword') as HTMLInputElement).value;
+                    const confirmPw = (form.elements.namedItem('confirmPassword') as HTMLInputElement).value;
+                    if (newPw !== confirmPw) {
+                      alert('New passwords do not match');
+                      return;
+                    }
+                    try {
+                      const adminUsername = localStorage.getItem('admin_username') || 'admin';
+                      const res = await fetch('/api/admin/change-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: adminUsername, oldPassword: oldPw, newPassword: newPw }),
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        alert('Password changed successfully!');
+                        form.reset();
+                      } else {
+                        alert('Error: ' + (data.error || 'Failed to change password'));
+                      }
+                    } catch (err) {
+                      alert('Connection error. Please try again.');
+                    }
+                  }}>
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Current Password</label>
+                        <input type="password" name="oldPassword" required className="w-full px-5 py-4 bg-gray-50 rounded-xl border border-gray-200 font-bold focus:ring-2 focus:ring-brand-blue" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">New Password</label>
+                        <input type="password" name="newPassword" required minLength={6} className="w-full px-5 py-4 bg-gray-50 rounded-xl border border-gray-200 font-bold focus:ring-2 focus:ring-brand-blue" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Confirm New Password</label>
+                        <input type="password" name="confirmPassword" required minLength={6} className="w-full px-5 py-4 bg-gray-50 rounded-xl border border-gray-200 font-bold focus:ring-2 focus:ring-brand-blue" />
+                      </div>
+                      <button type="submit" className="bg-brand-black text-white px-8 py-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-brand-blue transition-all shadow-lg">
+                        Update Password
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </motion.div>
             )}
 

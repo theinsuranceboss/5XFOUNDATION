@@ -4,14 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Lock, User, ArrowRight, ShieldCheck } from "lucide-react";
-import { getSiteContent } from "@/lib/supabase";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [triedLogin, setTriedLogin] = useState(false);
   const router = useRouter();
+
+  const loginResult = useQuery(api.admin.login, triedLogin ? { username, password } : "skip");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,51 +23,24 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      let authorized = false;
-      
-      // Load custom admin list from Supabase
-      const dbAdmins = await getSiteContent('adminUsers');
-      let adminList: any[] = [];
-      if (dbAdmins) {
-        try {
-          adminList = JSON.parse(dbAdmins);
-        } catch (e) {
-          console.error("Failed to parse dbAdmins:", e);
-        }
-      } else {
-        // Fallback to cache
-        const cached = localStorage.getItem('adminUsers');
-        if (cached) {
-          try {
-            adminList = JSON.parse(cached);
-          } catch (e) {}
-        }
-      }
+      setTriedLogin(false);
 
-      if (adminList && adminList.length > 0) {
-        authorized = adminList.some((u: any) => u.username === username && u.password === password);
-      }
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
 
-      // Safe fallback credentials
-      if (!authorized) {
-        authorized = (username === "admin" && password === "cancer");
-      }
-
-      if (authorized) {
+      if (data.success) {
         localStorage.setItem("admin_auth", "true");
+        localStorage.setItem("admin_username", username);
         router.push("/admin/dashboard");
       } else {
         setError("Invalid credentials. Access denied.");
       }
     } catch (err) {
-      console.error(err);
-      // Hard fallback
-      if (username === "admin" && password === "cancer") {
-        localStorage.setItem("admin_auth", "true");
-        router.push("/admin/dashboard");
-      } else {
-        setError("Invalid credentials. Access denied.");
-      }
+      setError("Connection error. Please try again.");
     } finally {
       setLoading(false);
     }
