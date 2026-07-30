@@ -9,9 +9,20 @@
  */
 
 import type * as adBanners from "../adBanners.js";
+import type * as admin from "../admin.js";
+import type * as ads from "../ads.js";
+import type * as cart from "../cart.js";
+import type * as categories from "../categories.js";
+import type * as events from "../events.js";
 import type * as files from "../files.js";
+import type * as migrate from "../migrate.js";
+import type * as orders from "../orders.js";
+import type * as paymentConfigs from "../paymentConfigs.js";
+import type * as products from "../products.js";
 import type * as reservations from "../reservations.js";
 import type * as siteContent from "../siteContent.js";
+import type * as stories from "../stories.js";
+import type * as upload from "../upload.js";
 
 import type {
   ApiFromModules,
@@ -21,9 +32,20 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   adBanners: typeof adBanners;
+  admin: typeof admin;
+  ads: typeof ads;
+  cart: typeof cart;
+  categories: typeof categories;
+  events: typeof events;
   files: typeof files;
+  migrate: typeof migrate;
+  orders: typeof orders;
+  paymentConfigs: typeof paymentConfigs;
+  products: typeof products;
   reservations: typeof reservations;
   siteContent: typeof siteContent;
+  stories: typeof stories;
+  upload: typeof upload;
 }>;
 
 /**

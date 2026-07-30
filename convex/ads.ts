@@ -18,23 +18,26 @@ export const recordClick = mutation({
   handler: async (ctx, args) => {
     const ad = await ctx.db.get(args.adId);
     if (ad) {
-      await ctx.db.patch(args.adId, { clicks: ad.clicks + 1 });
+      await ctx.db.patch(args.adId, { clicks: (ad.clicks ?? 0) + 1 });
     }
   },
 });
 
 export const create = mutation({
   args: {
-    title: v.string(),
+    name: v.string(),
     location: v.string(),
-    imageUrl: v.optional(v.string()),
-    linkUrl: v.optional(v.string()),
+    image_url: v.string(),
+    link_url: v.string(),
     active: v.boolean(),
   },
   handler: async (ctx, args) => {
+    const now = new Date().toISOString();
     return await ctx.db.insert("adBanners", {
       ...args,
       clicks: 0,
+      createdAt: now,
+      updatedAt: now,
     });
   },
 });
