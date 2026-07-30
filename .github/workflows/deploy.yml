@@ -11,8 +11,6 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --prefer-offline --no-audit
-        env:
-          NODE_ENV: production
       - run: npx netlify-cli deploy --build --prod
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
