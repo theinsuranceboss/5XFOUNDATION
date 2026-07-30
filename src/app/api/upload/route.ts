@@ -1,75 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { convexClient } from '@/lib/convex';
+import { api } from '@convex/_generated/api';
 import sharp from 'sharp';
 
-const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://secret-mongoose-212.convex.cloud';
-
-async function convexQuery(functionPath: string, args: Record<string, unknown> = {}) {
-  const res = await fetch(`${CONVEX_URL}/api/query`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path: functionPath, args }),
-  });
-  const data = await res.json();
-  if (data.status !== 'success') {
-    throw new Error(`Convex query ${functionPath} failed: ${data.error?.message}`);
-  }
-  return data.value;
-}
-
-async function convexMutation(functionPath: string, args: Record<string, unknown> = {}) {
-  const res = await fetch(`${CONVEX_URL}/api/mutation`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path: functionPath, args }),
-  });
-  const data = await res.json();
-  if (data.status !== 'success') {
-    throw new Error(`Convex mutation ${functionPath} failed: ${data.error?.message}`);
-  }
-  return data.value;
-}
-
-async function uploadToConvex(buffer: Buffer, contentType: string): Promise<string> {
-  const uploadUrl = await convexMutation('files:generateUploadUrl');
-
-  const uploadRes = await fetch(uploadUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': contentType },
-    body: new Uint8Array(buffer),
-  });
-
-  if (!uploadRes.ok) {
-    const errText = await uploadRes.text();
-    throw new Error(`Convex storage upload failed: ${uploadRes.status} ${errText}`);
-  }
-
-  const { storageId } = await uploadRes.json();
-  const publicUrl = await convexQuery('files:getFileUrl', { storageId });
-  return publicUrl;
-}
-
 export const dynamic = 'force-dynamic';
-
-function extractGDriveInfo(input: string): { fileId?: string; folderId?: string } {
-  if (!input) return {};
-  const str = input.trim();
-
-  const folderMatch = str.match(/\/folders\/([a-zA-Z0-9_-]{19,80})/);
-  if (folderMatch) return { folderId: folderMatch[1] };
-
-  const fileDMatch = str.match(/\/file\/d\/([a-zA-Z0-9_-]{19,80})/);
-  if (fileDMatch) return { fileId: fileDMatch[1] };
-
-  const idParamMatch = str.match(/[?&]id=([a-zA-Z0-9_-]{19,80})/);
-  if (idParamMatch) return { fileId: idParamMatch[1] };
-
-  const gUserContentMatch = str.match(/\/d\/([a-zA-Z0-9_-]{19,80})/);
-  if (gUserContentMatch) return { fileId: gUserContentMatch[1] };
-
-  if (/^[a-zA-Z0-9_-]{25,80}$/.test(str)) return { fileId: str };
-
-  return {};
-}
 
 async function optimizeImage(buffer: Buffer): Promise<Buffer> {
   try {
@@ -78,7 +12,7 @@ async function optimizeImage(buffer: Buffer): Promise<Buffer> {
       .webp({ quality: 82 })
       .toBuffer();
   } catch (e) {
-    console.warn('[upload/route.ts] Sharp optimization warning, returning original buffer:', e);
+    console.warn('[upload] Sharp optimization warning, returning original buffer:', e);
     return buffer;
   }
 }
@@ -86,7 +20,6 @@ async function optimizeImage(buffer: Buffer): Promise<Buffer> {
 export async function POST(req: NextRequest) {
   try {
     const contentTypeHeader = req.headers.get('content-type') || '';
-    
     let file: File | null = null;
     let name: string | null = null;
     let gdriveUrl: string | null = null;
@@ -103,49 +36,6 @@ export async function POST(req: NextRequest) {
     }
 
     if (gdriveUrl) {
-      const info = extractGDriveInfo(gdriveUrl);
-
-      if (info.folderId) {
-        const folderUrl = `https://drive.google.com/embeddedfolderview?id=${info.folderId}`;
-        try {
-          const res = await fetch(folderUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-          });
-          if (res.ok) {
-            const html = await res.text();
-            const matches = Array.from(html.matchAll(/id="entry-([a-zA-Z0-9_-]{19,80})"/g)).map(m => m[1]);
-            const uniqueIds = Array.from(new Set(matches));
-            if (uniqueIds.length > 0) {
-              const images = uniqueIds.map(id => `/api/gdrive/image?id=${id}&v=3`);
-              return NextResponse.json({ success: true, images });
-            }
-          }
-        } catch (e) {}
-        return NextResponse.json({ success: true, url: `/api/gdrive/image?id=${info.folderId}` });
-      }
-
-      if (info.fileId) {
-        const directGUrl = `https://lh3.googleusercontent.com/d/${info.fileId}=w1600`;
-
-        try {
-          const gRes = await fetch(directGUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-          });
-          if (gRes.ok) {
-            const rawBuf = Buffer.from(await gRes.arrayBuffer());
-            const optBuf = await optimizeImage(rawBuf);
-            const base64Str = optBuf.toString('base64');
-            const dataUri = `data:image/webp;base64,${base64Str}`;
-            return NextResponse.json({ success: true, url: dataUri });
-          }
-        } catch (e) {
-          console.warn('[upload] Could not fetch GDrive image:', e);
-        }
-
-        const proxyUrl = `/api/gdrive/image?id=${info.fileId}`;
-        return NextResponse.json({ success: true, url: proxyUrl });
-      }
-
       return NextResponse.json({ success: true, url: gdriveUrl });
     }
 
@@ -154,11 +44,27 @@ export async function POST(req: NextRequest) {
       const rawBuffer = Buffer.from(bytes);
       const optBuffer = await optimizeImage(rawBuffer);
 
-      const url = await uploadToConvex(optBuffer, file.type || 'image/webp');
+      const uploadUrl = await convexClient.mutation(api.upload.generateUploadUrl);
+      const formData = new FormData();
+      formData.append("file", new Blob([new Uint8Array(optBuffer)], { type: "image/webp" }));
 
+      const uploadRes = await fetch(uploadUrl, { method: "POST", body: formData });
+      const uploadResult = await uploadRes.json();
+
+      if (uploadResult.storageId) {
+        const { url } = await convexClient.mutation(api.upload.storeFile, {
+          storageId: uploadResult.storageId,
+          name: name || file.name,
+        });
+        if (url) {
+          return NextResponse.json({ success: true, url });
+        }
+      }
+
+      const base64Str = optBuffer.toString('base64');
       return NextResponse.json({
         success: true,
-        url
+        url: `data:image/webp;base64,${base64Str}`,
       });
     }
 

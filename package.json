@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -40,6 +40,8 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@stripe/react-stripe-js": "^6.2.0",
     "@stripe/stripe-js": "^9.2.0",
+    "@supabase/supabase-js": "^2.103.3",
+    "@tailwindcss/oxide": "^4.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.42.3",
@@ -59,7 +61,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
