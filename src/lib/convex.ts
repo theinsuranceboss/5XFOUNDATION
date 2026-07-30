@@ -1,11 +1,12 @@
 import { ConvexHttpClient } from "convex/browser";
 
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || "http://127.0.0.1:3210";
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || "https://secret-mongoose-212.convex.cloud";
 
 export const convexClient = new ConvexHttpClient(convexUrl);
 
 export async function convexQuery(functionPath: string, args: Record<string, unknown> = {}) {
-  const res = await fetch(`${convexUrl}/api/query`, {
+  const url = process.env.NEXT_PUBLIC_CONVEX_URL || convexUrl;
+  const res = await fetch(`${url}/api/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path: functionPath, args }),
@@ -18,7 +19,8 @@ export async function convexQuery(functionPath: string, args: Record<string, unk
 }
 
 export async function convexMutation(functionPath: string, args: Record<string, unknown> = {}) {
-  const res = await fetch(`${convexUrl}/api/mutation`, {
+  const url = process.env.NEXT_PUBLIC_CONVEX_URL || convexUrl;
+  const res = await fetch(`${url}/api/mutation`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path: functionPath, args }),

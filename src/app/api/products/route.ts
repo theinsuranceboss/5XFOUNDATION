@@ -9,8 +9,8 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get('category');
     const products = await convexQuery('products:list', { category: category || undefined }) as any[];
     return NextResponse.json(products);
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error fetching products:', error?.message || error);
+    return NextResponse.json({ error: 'Failed to fetch products', details: error?.message }, { status: 500 });
   }
 }
