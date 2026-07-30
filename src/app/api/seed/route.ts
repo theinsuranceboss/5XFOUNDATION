@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexQuery, convexMutation } from '@/lib/convex';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,22 +18,22 @@ export async function GET() {
     const results: string[] = [];
 
     for (const cat of categories) {
-      await convexClient.mutation(api.categories.create, cat);
+      await convexMutation('categories:create', cat);
       results.push(`Created category: ${cat.name}`);
     }
 
-    await convexClient.mutation(api.paymentConfigs.upsert, {
+    await convexMutation('paymentConfigs:upsert', {
       provider: 'stripe', apiKey: '', link: '', isActive: false,
     });
-    await convexClient.mutation(api.paymentConfigs.upsert, {
+    await convexMutation('paymentConfigs:upsert', {
       provider: 'paypal', apiKey: '', link: '', isActive: false,
     });
     results.push('Payment configs ensured');
 
     try {
-      const existing = await convexClient.query(api.admin.login, { username: 'admin', password: 'cancer' });
+      const existing = await convexQuery('admin:login', { username: 'admin', password: 'cancer' });
       if (!existing) {
-        await convexClient.mutation(api.admin.createAdmin, {
+        await convexMutation('admin:createAdmin', {
           username: 'admin', password: 'cancer', role: 'admin',
         });
         results.push('Admin user created');

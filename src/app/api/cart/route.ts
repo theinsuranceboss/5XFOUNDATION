@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexQuery, convexMutation } from '@/lib/convex';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +10,7 @@ export async function GET(req: NextRequest) {
     if (!sessionId) {
       return NextResponse.json({ error: 'sessionId is required' }, { status: 400 });
     }
-    const items = await convexClient.query(api.cart.getCart, { sessionId });
+    const items = await convexQuery('cart:getCart', { sessionId });
     return NextResponse.json(items);
   } catch (error) {
     console.error('Error fetching cart:', error);
@@ -26,9 +25,9 @@ export async function POST(req: NextRequest) {
     if (!sessionId || !productId || !color || !size) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-    const item = await convexClient.mutation(api.cart.addToCart, {
+    const item = await convexMutation('cart:addToCart', {
       sessionId,
-      productId: productId as any,
+      productId,
       color,
       size,
       quantity,
@@ -47,10 +46,7 @@ export async function PUT(req: NextRequest) {
     if (!id || quantity === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-    const result = await convexClient.mutation(api.cart.updateCartItem, {
-      id: id as any,
-      quantity,
-    });
+    const result = await convexMutation('cart:updateCartItem', { id, quantity });
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error updating cart item:', error);
@@ -64,11 +60,11 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
     const sessionId = searchParams.get('sessionId');
     if (id) {
-      await convexClient.mutation(api.cart.removeCartItem, { id: id as any });
+      await convexMutation('cart:removeCartItem', { id });
       return NextResponse.json({ deleted: true });
     }
     if (sessionId) {
-      await convexClient.mutation(api.cart.clearCart, { sessionId });
+      await convexMutation('cart:clearCart', { sessionId });
       return NextResponse.json({ cleared: true });
     }
     return NextResponse.json({ error: 'Missing id or sessionId' }, { status: 400 });

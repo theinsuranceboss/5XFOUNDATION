@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexQuery, convexMutation } from '@/lib/convex';
 import { fetchSyncProducts, fetchProductDetails } from '@/lib/printful';
 
 const getColorHex = (colorName: string): string => {
@@ -50,10 +49,10 @@ export async function POST() {
       else if (categoryIdVal === 28) catSlug = 'hoodies';
       else if (categoryIdVal === 6 || categoryIdVal === 24) catSlug = 't-shirts';
 
-      const existingCategories: any = await convexClient.query(api.categories.list);
+      const existingCategories: any = await convexQuery('categories:list');
       let productCategory = existingCategories.find((c: any) => c.slug === catSlug);
       if (!productCategory) {
-        const newCatId = await convexClient.mutation(api.categories.create, {
+        const newCatId = await convexMutation('categories:create', {
           name: catSlug.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
           slug: catSlug,
           order: catSlug === 't-shirts' ? 1 : catSlug === 'hoodies' ? 2 : catSlug === 'tanks' ? 3 : catSlug === 'hats' ? 4 : 5,
@@ -86,28 +85,28 @@ export async function POST() {
         });
       });
 
-      const productId = await convexClient.mutation(api.products.create, {
+      const productId = await convexMutation('products:create', {
         title,
         description: 'Automatically imported from Printful.',
         price: basePrice,
-        categoryId: productCategory.id as any,
+        categoryId: productCategory.id,
         syncId: String(p.id),
       });
 
-      await convexClient.mutation(api.products.removeAllImages, { productId: productId as any });
-      await convexClient.mutation(api.products.removeAllVariants, { productId: productId as any });
+      await convexMutation('products:removeAllImages', { productId });
+      await convexMutation('products:removeAllVariants', { productId });
 
       for (let i = 0; i < images.length; i++) {
-        await convexClient.mutation(api.products.addImage, {
-          productId: productId as any,
+        await convexMutation('products:addImage', {
+          productId,
           url: images[i].url,
           type: images[i].type,
           order: i,
         });
       }
       for (const variant of variants) {
-        await convexClient.mutation(api.products.addVariant, {
-          productId: productId as any,
+        await convexMutation('products:addVariant', {
+          productId,
           color: variant.color,
           size: variant.size,
           stock: variant.stock,

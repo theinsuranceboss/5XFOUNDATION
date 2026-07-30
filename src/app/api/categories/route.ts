@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexQuery } from '@/lib/convex';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const categories = await convexClient.query(api.categories.list);
+    const categories = await convexQuery('categories:list');
     return NextResponse.json(categories);
   } catch (error) {
     console.error('Error fetching categories:', error);

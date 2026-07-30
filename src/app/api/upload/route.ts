@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexQuery, convexMutation } from '@/lib/convex';
 import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
@@ -44,7 +43,7 @@ export async function POST(req: NextRequest) {
       const rawBuffer = Buffer.from(bytes);
       const optBuffer = await optimizeImage(rawBuffer);
 
-      const uploadUrl = await convexClient.mutation(api.upload.generateUploadUrl);
+      const uploadUrl = await convexMutation('upload:generateUploadUrl');
       const formData = new FormData();
       formData.append("file", new Blob([new Uint8Array(optBuffer)], { type: "image/webp" }));
 
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest) {
       const uploadResult = await uploadRes.json();
 
       if (uploadResult.storageId) {
-        const { url } = await convexClient.mutation(api.upload.storeFile, {
+        const { url } = await convexMutation('upload:storeFile', {
           storageId: uploadResult.storageId,
           name: name || file.name,
         });
