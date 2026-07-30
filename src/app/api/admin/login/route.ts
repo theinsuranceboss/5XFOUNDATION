@@ -5,7 +5,19 @@ export const config = { runtime: 'nodejs' };
 
 export async function POST(req: NextRequest) {
   try {
-    const { username, password } = await req.json();
+    // Read body from middleware header (workaround for Netlify body parsing issue)
+    const bodyHeader = req.headers.get('x-parsed-body');
+    let username, password;
+    if (bodyHeader) {
+      const body = JSON.parse(bodyHeader);
+      username = body.username;
+      password = body.password;
+    } else {
+      // Fallback to req.json()
+      const body = await req.json();
+      username = body.username;
+      password = body.password;
+    }
     if (!username || !password) {
       return NextResponse.json({ success: false, error: 'Missing credentials' }, { status: 400 });
     }
