@@ -6,7 +6,13 @@ export async function convexQuery(functionPath: string, args: Record<string, unk
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path: functionPath, args }),
   });
-  const data = await res.json();
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`Convex query ${functionPath} returned invalid JSON: ${text.slice(0, 200)}`);
+  }
   if (data.status !== 'success') {
     throw new Error(data.error?.message || `Convex query ${functionPath} failed`);
   }
@@ -19,7 +25,13 @@ export async function convexMutation(functionPath: string, args: Record<string, 
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path: functionPath, args }),
   });
-  const data = await res.json();
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`Convex mutation ${functionPath} returned invalid JSON: ${text.slice(0, 200)}`);
+  }
   if (data.status !== 'success') {
     throw new Error(data.error?.message || `Convex mutation ${functionPath} failed`);
   }
