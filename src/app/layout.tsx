@@ -9,6 +9,7 @@ import { CartSidebar } from "@/components/cart-sidebar";
 import { ProductDetail } from "@/components/product-detail";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/context/CartContext";
+import ConvexClientProvider from "@/providers/ConvexClientProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,19 +57,21 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans selection:bg-neon-green/30 selection:text-black">
-        <CartProvider>
-          <GlobalStyles />
-          <A11yAnnouncer />
-          <Navigation />
+        <ConvexClientProvider>
+          <CartProvider>
+            <GlobalStyles />
+            <A11yAnnouncer />
+            <Navigation />
 
-          <MainLayoutWrapper>
-            {children}
-          </MainLayoutWrapper>
-          <ProductDetail />
-          <CartSidebar />
-          <Toaster position="bottom-right" />
-          <Footer />
-        </CartProvider>
+            <MainLayoutWrapper>
+              {children}
+            </MainLayoutWrapper>
+            <ProductDetail />
+            <CartSidebar />
+            <Toaster position="bottom-right" />
+            <Footer />
+          </CartProvider>
+        </ConvexClientProvider>
       </body>
     </html>
   );

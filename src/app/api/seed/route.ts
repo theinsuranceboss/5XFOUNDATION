@@ -1,11 +1,11 @@
-import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { convexClient } from '@/lib/convex';
+import { api } from '@convex/_generated/api';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Create categories if they don't exist
     const categories = [
       { slug: 'all', name: 'All Products', order: 0 },
       { slug: 't-shirts', name: 'T-Shirts', order: 1 },
@@ -19,27 +19,29 @@ export async function GET() {
     const results: string[] = [];
 
     for (const cat of categories) {
-      const existing = await db.category.findUnique({ where: { slug: cat.slug } });
-      if (!existing) {
-        await db.category.create({ data: cat });
-        results.push(`Created category: ${cat.name}`);
-      } else {
-        results.push(`Category exists: ${cat.name}`);
-      }
+      await convexClient.mutation(api.categories.create, cat);
+      results.push(`Created category: ${cat.name}`);
     }
 
-    // Create payment configs
-    await db.paymentConfig.upsert({
-      where: { provider: 'stripe' },
-      update: {},
-      create: { provider: 'stripe', apiKey: '', link: '', isActive: false },
+    await convexClient.mutation(api.paymentConfigs.upsert, {
+      provider: 'stripe', apiKey: '', link: '', isActive: false,
     });
-    await db.paymentConfig.upsert({
-      where: { provider: 'paypal' },
-      update: {},
-      create: { provider: 'paypal', apiKey: '', link: '', isActive: false },
+    await convexClient.mutation(api.paymentConfigs.upsert, {
+      provider: 'paypal', apiKey: '', link: '', isActive: false,
     });
     results.push('Payment configs ensured');
+
+    try {
+      const existing = await convexClient.query(api.admin.login, { username: 'admin', password: 'cancer' });
+      if (!existing) {
+        await convexClient.mutation(api.admin.createAdmin, {
+          username: 'admin', password: 'cancer', role: 'admin',
+        });
+        results.push('Admin user created');
+      }
+    } catch (e) {
+      results.push('Admin user may already exist');
+    }
 
     return NextResponse.json({ success: true, results });
   } catch (error) {

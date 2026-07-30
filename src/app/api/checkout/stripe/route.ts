@@ -1,34 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { convexClient } from '@/lib/convex';
+import { api } from '@convex/_generated/api';
 
 export async function POST(req: NextRequest) {
   try {
     const { sessionId } = await req.json();
-
     if (!sessionId) {
       return NextResponse.json({ error: 'sessionId is required' }, { status: 400 });
     }
 
-    // Fetch cart items
-    const cartItems = await db.cartItem.findMany({
-      where: { sessionId },
-      include: {
-        product: {
-          include: {
-            images: true
-          }
-        }
-      }
-    });
-
-    if (cartItems.length === 0) {
+    const cartItems: any = await convexClient.query(api.cart.getCart, { sessionId });
+    if (!cartItems || cartItems.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const secretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
 
-    // Build Form Data for Stripe REST API
     const formParams = new URLSearchParams();
     formParams.append('payment_method_types[0]', 'card');
     formParams.append('shipping_address_collection[allowed_countries][0]', 'US');
@@ -40,14 +28,13 @@ export async function POST(req: NextRequest) {
 
     cartItems.forEach((item: any, i: number) => {
       const colorLower = item.color.toLowerCase();
-      const img = item.product.images.find((img: any) => img.url.toLowerCase().includes(colorLower)) || item.product.images[0];
-      
+      const img = item.product?.images?.find((img: any) => img.url.toLowerCase().includes(colorLower)) || item.product?.images?.[0];
       formParams.append(`line_items[${i}][price_data][currency]`, 'usd');
-      formParams.append(`line_items[${i}][price_data][product_data][name]`, `${item.product.title} - ${item.color} / ${item.size}`);
+      formParams.append(`line_items[${i}][price_data][product_data][name]`, `${item.product?.title || 'Product'} - ${item.color} / ${item.size}`);
       if (img?.url) {
         formParams.append(`line_items[${i}][price_data][product_data][images][0]`, img.url);
       }
-      formParams.append(`line_items[${i}][price_data][unit_amount]`, Math.round(item.product.price * 100).toString());
+      formParams.append(`line_items[${i}][price_data][unit_amount]`, Math.round((item.product?.price || 0) * 100).toString());
       formParams.append(`line_items[${i}][quantity]`, item.quantity.toString());
     });
 
@@ -61,7 +48,6 @@ export async function POST(req: NextRequest) {
     });
 
     const data = await res.json();
-
     if (!res.ok) {
       throw new Error(data.error?.message || 'Failed to create session');
     }
