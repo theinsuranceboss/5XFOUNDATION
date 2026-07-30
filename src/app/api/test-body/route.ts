@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const config = { runtime: 'nodejs' };
+
 export async function POST(req: Request) {
   try {
     const text = await req.text();

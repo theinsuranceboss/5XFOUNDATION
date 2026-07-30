@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { convexQuery } from '@/lib/convexClient';
 
+export const config = { runtime: 'nodejs' };
+
 export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
