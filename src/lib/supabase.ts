@@ -1,56 +1,66 @@
-import { createClient } from '@supabase/supabase-js'
+const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://secret-mongoose-212.convex.cloud';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-
-// CMS Helper functions
-export async function getSiteContent(key: string) {
-  const { data, error } = await supabase
-    .from('site_content')
-    .select('content')
-    .eq('section_key', key)
-    .maybeSingle()
-  
-  if (error || !data) return null
-  return data.content
+async function convexQuery(functionPath: string, args: Record<string, unknown> = {}) {
+  const res = await fetch(`${CONVEX_URL}/api/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: functionPath, args }),
+  });
+  const data = await res.json();
+  if (data.status !== 'success') {
+    console.error(`[convex] Query ${functionPath} failed:`, data.error?.message);
+    return null;
+  }
+  return data.value;
 }
 
-export async function updateSiteContent(key: string, content: string) {
-  const { error } = await supabase
-    .from('site_content')
-    .upsert(
-      { section_key: key, content, updated_at: new Date().toISOString() },
-      { onConflict: 'section_key' }
-    )
-  
-  return { success: !error, error }
+async function convexMutation(functionPath: string, args: Record<string, unknown> = {}) {
+  const res = await fetch(`${CONVEX_URL}/api/mutation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: functionPath, args }),
+  });
+  const data = await res.json();
+  if (data.status !== 'success') {
+    console.error(`[convex] Mutation ${functionPath} failed:`, data.error?.message);
+    return null;
+  }
+  return data.value;
+}
+
+export async function getSiteContent(key: string): Promise<string | null> {
+  const result = await convexQuery('siteContent:get', { key });
+  return result ?? null;
+}
+
+export async function updateSiteContent(key: string, content: string): Promise<{ success: boolean }> {
+  try {
+    await convexMutation('siteContent:upsert', { key, content });
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
 }
 
 export async function getActiveAds(location: 'footer' | 'sidebar') {
-  const { data, error } = await supabase
-    .from('ad_banners')
-    .select('*')
-    .eq('location', location)
-    .eq('active', true)
-  
-  return { data, error }
+  const data = await convexQuery('adBanners:getActive', { location });
+  return { data: data ?? [], error: null };
 }
 
 export async function recordAdClick(adId: string) {
-  // Use RPC for atomic increment if available, or fetch and update
-  const { error } = await supabase.rpc('increment_ad_clicks', { ad_id: adId })
-  return { error }
+  await convexMutation('adBanners:recordClick', { adId });
 }
 
-// Types for the database
-export type SiteContent = {
-  id: string
-  section_key: string
-  content: string
-  updated_at: string
+export async function getReservations() {
+  return await convexQuery('reservations:list', {}) ?? [];
 }
-// ... [rest of types]
 
+export async function addReservation(data: {
+  name: string; email: string; phone: string; eventId: string; eventTitle: string;
+}) {
+  return await convexMutation('reservations:add', data);
+}
+
+export async function deleteReservation(id: string) {
+  return await convexMutation('reservations:remove', { id });
+}

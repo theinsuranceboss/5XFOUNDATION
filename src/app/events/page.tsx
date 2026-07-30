@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, MapPin, Clock, ArrowRight, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getSiteContent, updateSiteContent } from "@/lib/supabase";
+import { getSiteContent, updateSiteContent, addReservation } from "@/lib/supabase";
 
 export default function EventsPage() {
   const [v, setV] = useState(0);
@@ -18,7 +18,9 @@ export default function EventsPage() {
     eventTitle: 'UPCOMING 5X EVENTS',
     eventSubtitle: 'Join us as we build a stronger network of warriors together.',
     eventBannerTitleColor: '#FFFFFF',
+    eventBannerTitleSize: '48',
     eventBannerSubtitleColor: '#E5E7EB',
+    eventBannerSubtitleSize: '16',
     eventRsvpBtnBg: '#000000',
     eventRsvpBtnTextColor: '#FFFFFF'
   });
@@ -115,40 +117,13 @@ export default function EventsPage() {
 
     setIsSubmitting(true);
     try {
-      // 1. Fetch current list of reservations
-      let currentReservations: any[] = [];
-      const dbRes = await getSiteContent('siteReservations');
-      if (dbRes) {
-        try {
-          currentReservations = JSON.parse(dbRes);
-        } catch (err) {
-          console.error("Failed to parse siteReservations:", err);
-        }
-      } else {
-        const cached = localStorage.getItem('siteReservations');
-        if (cached) {
-          try {
-            currentReservations = JSON.parse(cached);
-          } catch (e) {}
-        }
-      }
-
-      // 2. Add new reservation
-      const newReservation = {
-        id: `res_${Date.now()}`,
+      await addReservation({
         name: rsvpName,
         email: rsvpEmail,
         phone: rsvpPhone || "",
         eventId: activeEvent.id,
         eventTitle: activeEvent.title,
-        createdAt: new Date().toISOString()
-      };
-
-      const updated = [...currentReservations, newReservation];
-
-      // 3. Save to Supabase and cache
-      await updateSiteContent('siteReservations', JSON.stringify(updated));
-      localStorage.setItem('siteReservations', JSON.stringify(updated));
+      });
 
       setSubmitted(true);
       setRsvpName("");
@@ -195,15 +170,15 @@ export default function EventsPage() {
           >
             <span className="text-[10px] font-black tracking-[0.3em] uppercase text-gray-400">Community Events</span>
             <h1 
-              className="text-3xl sm:text-4xl md:text-5xl font-black italic tracking-tighter uppercase leading-none"
-              style={{ color: content.eventBannerTitleColor || '#FFFFFF' }}
+              className="font-black italic tracking-tighter uppercase leading-none"
+              style={{ color: content.eventBannerTitleColor || '#FFFFFF', fontSize: `${content.eventBannerTitleSize || 48}px` }}
             >
               {content.eventTitle || 'UPCOMING 5X EVENTS'}
             </h1>
             <div className="w-12 h-1 bg-blue-500 rounded-full" />
             <p 
-              className="text-xs sm:text-sm font-medium leading-relaxed"
-              style={{ color: content.eventBannerSubtitleColor || '#E5E7EB' }}
+              className="font-medium leading-relaxed"
+              style={{ color: content.eventBannerSubtitleColor || '#E5E7EB', fontSize: `${content.eventBannerSubtitleSize || 16}px` }}
             >
               {content.eventSubtitle || 'Join us as we build a stronger network of warriors together.'}
             </p>
@@ -244,15 +219,15 @@ export default function EventsPage() {
           <div className={`relative z-10 px-8 py-12 flex flex-col space-y-4 w-full ${overlayAlignClasses}`}>
             <span className="text-[10px] font-black tracking-[0.3em] uppercase" style={{ color: content.eventBannerSubtitleColor || '#E5E7EB' }}>Community Events</span>
             <h1 
-              className="text-4xl sm:text-5xl md:text-6xl font-black italic tracking-tighter uppercase leading-none"
-              style={{ color: content.eventBannerTitleColor || '#FFFFFF' }}
+              className="font-black italic tracking-tighter uppercase leading-none"
+              style={{ color: content.eventBannerTitleColor || '#FFFFFF', fontSize: `${content.eventBannerTitleSize || 48}px` }}
             >
               {content.eventTitle || 'UPCOMING 5X EVENTS'}
             </h1>
             <div className="w-12 h-1 bg-blue-500 rounded-full" />
             <p 
-              className="text-sm font-medium leading-relaxed max-w-2xl"
-              style={{ color: content.eventBannerSubtitleColor || '#E5E7EB' }}
+              className="font-medium leading-relaxed max-w-2xl"
+              style={{ color: content.eventBannerSubtitleColor || '#E5E7EB', fontSize: `${content.eventBannerSubtitleSize || 16}px` }}
             >
               {content.eventSubtitle || 'Join us as we build a stronger network of warriors together.'}
             </p>

@@ -27,7 +27,7 @@ import {
   Menu,
   X
 } from "lucide-react";
-import { getSiteContent, updateSiteContent } from "@/lib/supabase";
+import { getSiteContent, updateSiteContent, getReservations, deleteReservation } from "@/lib/supabase";
 import { AdminPanel } from "@/components/admin-panel";
 
 
@@ -100,10 +100,11 @@ function StoryImagePreview({ source, name }: { source: string; name: string }) {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'content' | 'ads' | 'events' | 'merch' | 'who_we_help' | 'media' | 'theme' | 'donations'>('media');
+  const [activeTab, setActiveTab] = useState<'content' | 'ads' | 'events' | 'merch' | 'who_we_help' | 'media' | 'theme' | 'donations' | 'rsvps'>('media');
   const [isSaving, setIsSaving] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [reservations, setReservations] = useState<any[]>([]);
   
   // Real paths that reflect what is on the server
   const [siteImages, setSiteImages] = useState([
@@ -131,7 +132,31 @@ export default function AdminDashboard() {
     hero_3: "/hero_3.png",
     hero_gdrive_link: "https://drive.google.com/drive/folders/1c46Rf9ajwya3DsUwNbVoLtsp09v42trD?usp=sharing",
     rich: "/rich.png",
+    richType: "media",
+    richDesktop: "",
+    richTablet: "",
+    richMobile: "",
+    richLink: "",
+    richHtml: "",
+    richSize: "cover",
+    richPosition: "center",
+    richTextSize: "14",
+    richTextColor: "#FFFFFF",
+    richLayout: "full",
+    richPlacement: "center",
     fundraisingBg: "",
+    fundraisingBgType: "media",
+    fundraisingBgDesktop: "",
+    fundraisingBgTablet: "",
+    fundraisingBgMobile: "",
+    fundraisingBgLink: "",
+    fundraisingBgHtml: "",
+    fundraisingBgSize: "cover",
+    fundraisingBgPosition: "center",
+    fundraisingBgTextSize: "14",
+    fundraisingBgTextColor: "#FFFFFF",
+    fundraisingBgLayout: "full",
+    fundraisingBgPlacement: "center",
     themeFontFamily: "Inter",
     themeHeadingCase: "uppercase",
     themeFontSize: "16",
@@ -190,7 +215,9 @@ export default function AdminDashboard() {
     eventTitle: "UPCOMING 5X EVENTS",
     eventSubtitle: "Join us as we build a stronger network of warriors together.",
     eventBannerTitleColor: "#FFFFFF",
+    eventBannerTitleSize: "48",
     eventBannerSubtitleColor: "#E5E7EB",
+    eventBannerSubtitleSize: "16",
     eventBannerLayout: "full",
     eventBannerPlacement: "center",
     eventBannerLink: "",
@@ -265,6 +292,8 @@ export default function AdminDashboard() {
     adTopHtml: "",
     adTopSize: "fill",
     adTopPosition: "center",
+    adTopTextSize: "14",
+    adTopTextColor: "#FFFFFF",
     adMiddleType: "media",
     adMiddleDesktop: "",
     adMiddleTablet: "",
@@ -273,6 +302,8 @@ export default function AdminDashboard() {
     adMiddleHtml: "",
     adMiddleSize: "fill",
     adMiddlePosition: "center",
+    adMiddleTextSize: "14",
+    adMiddleTextColor: "#FFFFFF",
     adBottomType: "media",
     adBottomDesktop: "",
     adBottomTablet: "",
@@ -281,6 +312,8 @@ export default function AdminDashboard() {
     adBottomHtml: "",
     adBottomSize: "fill",
     adBottomPosition: "center",
+    adBottomTextSize: "14",
+    adBottomTextColor: "#FFFFFF",
     donateTitle: "FUEL THE FIGHT",
     donateTitleSize: "48",
     donateTitleColor: "#FFFFFF",
@@ -775,7 +808,7 @@ export default function AdminDashboard() {
     {
       id: 'connor',
       name: 'Connor Young',
-      tag: 'Ewing Sarcoma Survivor',
+      tag: '',
       journey: 'Connor is a courageous 5-year-old from Illinois battling Ewing Sarcoma, a rare and aggressive cancer. After 15+ rounds of chemotherapy and a life-changing rotationplasty surgery, Connor continues to fight with incredible strength.',
       help: 'Through the Five Time Foundation™, we’ve raised funds to bring Connor and his family to A Step Ahead Prosthetics, where he’ll receive a world-class prosthetic giving him the freedom to move, play, and just be a kid again.',
       img: 'https://drive.google.com/drive/folders/1JQ0x7yNQZONjYHDjgOGgjah8srTl9Lpk?usp=sharing'
@@ -873,6 +906,10 @@ export default function AdminDashboard() {
     loadAllData();
   }, []);
 
+  useEffect(() => {
+    getReservations().then(setReservations);
+  }, []);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -901,11 +938,14 @@ export default function AdminDashboard() {
 
         // 1. Is it a global website asset?
         const contentKeys = [
-          'logo', 'hero_gdrive_link', 'rich', 'fundraisingBg', 'shopBanner', 'donateBanner', 
+          'logo', 'hero_gdrive_link', 'rich', 'richDesktop', 'richTablet', 'richMobile', 'fundraisingBg', 'fundraisingBgDesktop', 'fundraisingBgTablet', 'fundraisingBgMobile', 'shopBanner', 'donateBanner', 
           'philosophyBg', 'everyDollarBgImage', 'eventBanner',
           'adTopDesktop', 'adTopTablet', 'adTopMobile',
           'adMiddleDesktop', 'adMiddleTablet', 'adMiddleMobile',
-          'adBottomDesktop', 'adBottomTablet', 'adBottomMobile'
+          'adBottomDesktop', 'adBottomTablet', 'adBottomMobile',
+          'adTopTextSize', 'adTopTextColor',
+          'adMiddleTextSize', 'adMiddleTextColor',
+          'adBottomTextSize', 'adBottomTextColor'
         ];
 
         if (contentKeys.includes(id)) {
@@ -1099,6 +1139,8 @@ export default function AdminDashboard() {
             { id: 'merch', icon: <Tag size={18} />, label: 'Shop Pricing' },
             { id: 'theme', icon: <Layout size={18} />, label: 'Theme Settings' },
             { id: 'ads', icon: <Sliders size={18} />, label: 'Advertisement' },
+            { id: 'donations', icon: <Heart size={18} />, label: 'Donations' },
+            { id: 'rsvps', icon: <UserPlus size={18} />, label: 'RSVPs' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1162,7 +1204,7 @@ export default function AdminDashboard() {
                   const isGDriveSlider = img.id === 'hero_gdrive_link';
                   
                   return (
-                    <div key={img.id} className={`p-8 bg-brand-gray/30 rounded-[2rem] border border-transparent hover:border-brand-blue/20 transition-all group ${isGDriveSlider ? 'md:col-span-2' : ''}`}>
+                    <div key={img.id} className={`p-8 bg-brand-gray/30 rounded-[2rem] border border-transparent hover:border-brand-blue/20 transition-all group ${isGDriveSlider || img.id === 'rich' || img.id === 'fundraisingBg' ? 'md:col-span-2' : ''}`}>
                        <div className="flex justify-between items-start mb-6">
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue mb-1">{img.page}</p>
@@ -1227,43 +1269,273 @@ export default function AdminDashboard() {
                              />
                            </div>
                          </div>
-                       ) : (
-                         <>
-                           <div 
-                             onClick={() => {
-                               const input = document.getElementById('image-upload') as any;
-                               input.dataset.currentId = img.id;
-                               input.click();
-                             }}
-                             className="aspect-video relative rounded-2xl overflow-hidden mb-4 bg-black cursor-pointer shadow-md"
-                           >
-                              <img src={img.current} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={img.label} />
-                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all">
-                                <Upload className="text-white mb-2" size={32} />
-                                <span className="text-white text-[10px] font-black tracking-widest uppercase">Click to Replace</span>
+                        ) : img.id === 'fundraisingBg' || img.id === 'rich' ? (
+                          <>
+                            <div className="space-y-5">
+                              <div className="flex bg-gray-200/80 rounded-2xl p-1.5 w-fit">
+                                {[
+                                  { label: "Creative Asset", val: "media" },
+                                  { label: "HTML / Script", val: "html" }
+                                ].map((mode) => (
+                                  <button
+                                    type="button"
+                                    key={mode.val}
+                                    onClick={() => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgType' : 'richType']: mode.val }))}
+                                    className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all ${
+                                      (content[img.id === 'fundraisingBg' ? 'fundraisingBgType' : 'richType'] || "media") === mode.val
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-400 hover:text-black"
+                                    }`}
+                                  >
+                                    {mode.label}
+                                  </button>
+                                ))}
                               </div>
-                           </div>
+                              {(content[img.id === 'fundraisingBg' ? 'fundraisingBgType' : 'richType'] || "media") === "html" ? (
+                                <div>
+                                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">HTML / Embed Code</label>
+                                  <textarea
+                                    rows={4}
+                                    className="w-full bg-white border border-gray-200 px-5 py-4 rounded-xl font-mono text-xs text-black"
+                                    value={content[img.id === 'fundraisingBg' ? 'fundraisingBgHtml' : 'richHtml'] || ''}
+                                    onChange={(e) => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgHtml' : 'richHtml']: e.target.value }))}
+                                    placeholder="<div>Your custom HTML here...</div>"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="space-y-5">
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    {["Desktop", "Tablet", "Mobile"].map((device) => {
+                                      const contentKey = img.id === 'fundraisingBg' ? `fundraisingBg${device}` : `rich${device}`;
+                                      return (
+                                        <div key={device}>
+                                          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">{device} URL</label>
+                                          <div className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              className="flex-1 bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black"
+                                              value={(content as any)[contentKey] || ''}
+                                              onChange={(e) => setContent(prev => ({ ...prev, [contentKey]: e.target.value }))}
+                                              placeholder="https://..."
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const input = document.getElementById('image-upload') as any;
+                                                input.dataset.currentId = contentKey;
+                                                input.click();
+                                              }}
+                                              className="bg-brand-blue hover:bg-black text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shrink-0"
+                                            >Upload</button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-gray-150">
+                                    <div>
+                                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Banner Layout Mode</label>
+                                      <select
+                                        className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black shadow-sm"
+                                        value={content[img.id === 'fundraisingBg' ? 'fundraisingBgLayout' : 'richLayout'] || 'full'}
+                                        onChange={(e) => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgLayout' : 'richLayout']: e.target.value }))}
+                                      >
+                                        <option value="full">Full Overlay</option>
+                                        <option value="split">Split Screen</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Text Placement</label>
+                                      <select
+                                        className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black shadow-sm"
+                                        value={content[img.id === 'fundraisingBg' ? 'fundraisingBgPlacement' : 'richPlacement'] || 'center'}
+                                        onChange={(e) => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgPlacement' : 'richPlacement']: e.target.value }))}
+                                      >
+                                        <option value="left">Left</option>
+                                        <option value="center">Center</option>
+                                        <option value="right">Right</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Banner Fit</label>
+                                      <select
+                                        className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black shadow-sm"
+                                        value={content[img.id === 'fundraisingBg' ? 'fundraisingBgSize' : 'richSize'] || 'cover'}
+                                        onChange={(e) => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgSize' : 'richSize']: e.target.value }))}
+                                      >
+                                        <option value="cover">Cover</option>
+                                        <option value="centered">Contain</option>
+                                        <option value="stretch">Stretch</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Position</label>
+                                      <select
+                                        className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black shadow-sm"
+                                        value={content[img.id === 'fundraisingBg' ? 'fundraisingBgPosition' : 'richPosition'] || 'center'}
+                                        onChange={(e) => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgPosition' : 'richPosition']: e.target.value }))}
+                                      >
+                                        <option value="center">Center</option>
+                                        <option value="top">Top</option>
+                                        <option value="bottom">Bottom</option>
+                                        <option value="left">Left</option>
+                                        <option value="right">Right</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-gray-150">
+                                    <div>
+                                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Link URL</label>
+                                      <input
+                                        type="text"
+                                        className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black"
+                                        value={content[img.id === 'fundraisingBg' ? 'fundraisingBgLink' : 'richLink'] || ''}
+                                        onChange={(e) => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgLink' : 'richLink']: e.target.value }))}
+                                        placeholder="https://..."
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Text Size (px)</label>
+                                        <input
+                                          type="number"
+                                          min="8"
+                                          max="72"
+                                          className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black"
+                                          value={content[img.id === 'fundraisingBg' ? 'fundraisingBgTextSize' : 'richTextSize'] || '14'}
+                                          onChange={(e) => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgTextSize' : 'richTextSize']: e.target.value }))}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Text Color</label>
+                                        <div className="flex gap-2">
+                                          <input
+                                            type="color"
+                                            className="w-10 h-10 rounded-xl border border-gray-200 cursor-pointer"
+                                            value={content[img.id === 'fundraisingBg' ? 'fundraisingBgTextColor' : 'richTextColor'] || '#FFFFFF'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgTextColor' : 'richTextColor']: e.target.value }))}
+                                          />
+                                          <input
+                                            type="text"
+                                            className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black uppercase"
+                                            value={content[img.id === 'fundraisingBg' ? 'fundraisingBgTextColor' : 'richTextColor'] || '#FFFFFF'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, [img.id === 'fundraisingBg' ? 'fundraisingBgTextColor' : 'richTextColor']: e.target.value }))}
+                                            placeholder="#FFFFFF"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {/* Live Preview */}
+                            {(() => {
+                              const pType = content[img.id === 'fundraisingBg' ? 'fundraisingBgType' : 'richType'] || "media";
+                              const pDesktop = content[img.id === 'fundraisingBg' ? 'fundraisingBgDesktop' : 'richDesktop']?.trim() || img.current;
+                              const pTablet = content[img.id === 'fundraisingBg' ? 'fundraisingBgTablet' : 'richTablet']?.trim() || pDesktop;
+                              const pMobile = content[img.id === 'fundraisingBg' ? 'fundraisingBgMobile' : 'richMobile']?.trim() || pTablet;
+                              const pHtml = content[img.id === 'fundraisingBg' ? 'fundraisingBgHtml' : 'richHtml']?.trim();
+                              const pLink = content[img.id === 'fundraisingBg' ? 'fundraisingBgLink' : 'richLink']?.trim();
+                              const isSplit = (content[img.id === 'fundraisingBg' ? 'fundraisingBgLayout' : 'richLayout'] || 'full') === 'split';
+                              const pTextSize = content[img.id === 'fundraisingBg' ? 'fundraisingBgTextSize' : 'richTextSize'] || '14';
+                              const pTextColor = content[img.id === 'fundraisingBg' ? 'fundraisingBgTextColor' : 'richTextColor'] || '#FFFFFF';
+                              const pPosition = content[img.id === 'fundraisingBg' ? 'fundraisingBgPosition' : 'richPosition'] || 'center';
+                              const pFit = content[img.id === 'fundraisingBg' ? 'fundraisingBgSize' : 'richSize'] || 'cover';
+                              const isCenter = (content[img.id === 'fundraisingBg' ? 'fundraisingBgPlacement' : 'richPlacement'] || 'center') === 'center';
+                              const isRight = (content[img.id === 'fundraisingBg' ? 'fundraisingBgPlacement' : 'richPlacement'] || 'center') === 'right';
+                              const src = previewDevice === 'desktop' ? pDesktop : previewDevice === 'tablet' ? pTablet : pMobile;
 
-                           <div className="mt-4 space-y-2">
-                             <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Direct Link / URL</label>
-                             <input 
-                               type="text" 
-                               className="w-full bg-white px-5 py-3 rounded-xl font-bold text-xs border border-gray-200 focus:ring-2 focus:ring-brand-blue focus:border-brand-blue transition-all"
-                               value={img.current}
-                               placeholder="Paste image link here (e.g. from Google Drive)..."
-                               onChange={(e) => {
-                                 const val = e.target.value;
-                                 // Update siteImages preview
-                                 setSiteImages(prev => prev.map(item => 
-                                   item.id === img.id ? { ...item, current: val } : item
-                                 ));
-                                 // Update content state
-                                 setContent(prev => ({ ...prev, [img.id]: val }));
-                               }}
-                             />
-                           </div>
-                         </>
-                       )}
+                              if (pType === "html" && pHtml) {
+                                return (
+                                  <div className="mt-6 pt-6 border-t border-gray-150 space-y-3">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-blue block">Live Preview</span>
+                                    <div className="bg-white border border-gray-200 rounded-2xl p-6 overflow-hidden flex justify-center items-center min-h-[120px] text-xs text-gray-500" dangerouslySetInnerHTML={{ __html: pHtml }} />
+                                  </div>
+                                );
+                              }
+
+                              if (!src) return null;
+
+                              const fitStyle = pFit === 'centered' ? 'contain' : pFit === 'stretch' ? '100% 100%' : 'cover';
+
+                              return (
+                                <div className="mt-6 pt-6 border-t border-gray-150 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-blue block">Live Preview</span>
+                                    <div className="flex items-center bg-gray-150 p-0.5 rounded-xl border border-gray-200 shadow-sm w-fit">
+                                      {["desktop","tablet","mobile"].map((d) => (
+                                        <button
+                                          key={d}
+                                          type="button"
+                                          onClick={() => setPreviewDevice(d as any)}
+                                          className={`px-2.5 py-1 rounded-lg text-[7px] font-black uppercase tracking-wider transition-all ${previewDevice === d ? 'bg-brand-blue text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                                        >
+                                          {d === 'desktop' ? 'DT' : d === 'tablet' ? 'TB' : 'MB'}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div className="bg-black rounded-xl overflow-hidden shadow-lg flex select-none" style={{ height: previewDevice === 'desktop' ? '120px' : previewDevice === 'tablet' ? '140px' : '160px' }}>
+                                    {isSplit ? (
+                                      <div className="flex w-full h-full">
+                                        <div className="w-1/2 h-full flex flex-col justify-center p-3" style={{ textAlign: isCenter ? 'center' : isRight ? 'right' : 'left' }}>
+                                          <span className="text-[6px] uppercase tracking-widest font-bold" style={{ color: pTextColor }}>Slot</span>
+                                          <div style={{ fontSize: `${Math.min(parseInt(pTextSize) / 4, 12)}px`, color: pTextColor }} className="font-black italic leading-none">PREVIEW</div>
+                                        </div>
+                                        <div className="w-1/2 h-full" style={{ backgroundImage: `url(${src})`, backgroundSize: fitStyle, backgroundPosition: pPosition, backgroundRepeat: 'no-repeat' }} />
+                                      </div>
+                                    ) : (
+                                      <div className="relative w-full h-full">
+                                        <div className="absolute inset-0" style={{ backgroundImage: `url(${src})`, backgroundSize: fitStyle, backgroundPosition: pPosition, backgroundRepeat: 'no-repeat' }} />
+                                        <div className="absolute inset-0 bg-black/40" />
+                                        <div className="absolute inset-0 flex items-center justify-center" style={{ fontSize: `${Math.min(parseInt(pTextSize) / 3, 14)}px`, color: pTextColor }}>
+                                          PREVIEW
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </>
+                        ) : (
+                          <>
+                            <div 
+                              onClick={() => {
+                                const input = document.getElementById('image-upload') as any;
+                                input.dataset.currentId = img.id;
+                                input.click();
+                              }}
+                              className="aspect-video relative rounded-2xl overflow-hidden mb-4 bg-black cursor-pointer shadow-md"
+                            >
+                               <img src={img.current} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={img.label} />
+                               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all">
+                                 <Upload className="text-white mb-2" size={32} />
+                                 <span className="text-white text-[10px] font-black tracking-widest uppercase">Click to Replace</span>
+                               </div>
+                            </div>
+
+                            <div className="mt-4 space-y-2">
+                              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Direct Link / URL</label>
+                              <input 
+                                type="text" 
+                                className="w-full bg-white px-5 py-3 rounded-xl font-bold text-xs border border-gray-200 focus:ring-2 focus:ring-brand-blue focus:border-brand-blue transition-all"
+                                value={img.current}
+                                placeholder="Paste image link here (e.g. from Google Drive)..."
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  // Update siteImages preview
+                                  setSiteImages(prev => prev.map(item => 
+                                    item.id === img.id ? { ...item, current: val } : item
+                                  ));
+                                  // Update content state
+                                  setContent(prev => ({ ...prev, [img.id]: val }));
+                                }}
+                              />
+                            </div>
+                          </>
+                        )}
                     </div>
                   );
                 })}
@@ -1400,7 +1672,6 @@ export default function AdminDashboard() {
                             />
                           </div>
                         </div>
-
                         <div>
                           <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue mb-2">Subtitle Color</label>
                           <div className="flex gap-2">
@@ -1846,9 +2117,9 @@ export default function AdminDashboard() {
                            />
                          </div>
 
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           <div>
-                             <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue mb-2">Title Color</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue mb-2">Title Color</label>
                              <div className="flex gap-2">
                                <input 
                                  type="color"
@@ -1864,6 +2135,18 @@ export default function AdminDashboard() {
                                  onChange={(e) => setContent(prev => ({ ...prev, eventBannerTitleColor: e.target.value }))}
                                />
                              </div>
+                           </div>
+                           <div>
+                             <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue mb-2">Title Text Size (px)</label>
+                             <input
+                               type="number"
+                               min="8"
+                               max="200"
+                               className="w-full bg-gray-50 px-6 py-4 rounded-2xl font-bold text-xs border border-gray-200 focus:ring-2 focus:ring-brand-blue text-black"
+                               placeholder="48"
+                               value={content.eventBannerTitleSize || '48'}
+                               onChange={(e) => setContent(prev => ({ ...prev, eventBannerTitleSize: e.target.value }))}
+                             />
                            </div>
                            <div>
                              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue mb-2">Subtitle Color</label>
@@ -1901,6 +2184,18 @@ export default function AdminDashboard() {
                             placeholder="Join us as we build a stronger network..."
                             value={content.eventSubtitle || ''}
                             onChange={(e) => setContent(prev => ({ ...prev, eventSubtitle: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue mb-2">Subtitle Text Size (px)</label>
+                          <input
+                            type="number"
+                            min="8"
+                            max="200"
+                            className="w-full bg-gray-50 px-6 py-4 rounded-2xl font-bold text-xs border border-gray-200 focus:ring-2 focus:ring-brand-blue text-black"
+                            placeholder="16"
+                            value={content.eventBannerSubtitleSize || '16'}
+                            onChange={(e) => setContent(prev => ({ ...prev, eventBannerSubtitleSize: e.target.value }))}
                           />
                         </div>
                       </div>
@@ -2929,6 +3224,181 @@ export default function AdminDashboard() {
                             {/* Section 4: Founder Section */}
                             <div className="bg-white p-6 rounded-3xl border border-gray-150 shadow-sm space-y-4">
                               <h6 className="text-[10px] font-black uppercase tracking-wider text-brand-blue">4. Founder Section (Rich Canci)</h6>
+
+                              {/* Portrait Image Controls */}
+                              <div className="space-y-3 pb-3 border-b border-gray-100">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 block">Portrait Image</span>
+                                <div className="flex bg-gray-200/80 rounded-2xl p-1.5 self-stretch md:self-auto w-fit">
+                                  {[
+                                    { label: "Creative Asset", val: "media" },
+                                    { label: "HTML / Script", val: "html" }
+                                  ].map((mode) => (
+                                    <button
+                                      type="button"
+                                      key={mode.val}
+                                      onClick={() => setContent(prev => ({ ...prev, richType: mode.val }))}
+                                      className={`px-4 py-2 rounded-xl font-black text-[8px] uppercase tracking-wider transition-all ${
+                                        (content.richType || "media") === mode.val
+                                          ? "bg-black text-white shadow-md"
+                                          : "text-gray-400 hover:text-black"
+                                      }`}
+                                    >
+                                      {mode.label}
+                                    </button>
+                                  ))}
+                                </div>
+                                {(content.richType || "media") === "html" ? (
+                                  <div>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">HTML / Embed Code</label>
+                                    <textarea
+                                      rows={4}
+                                      className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl font-mono text-xs text-black"
+                                      value={content.richHtml || ''}
+                                      onChange={(e) => setContent(prev => ({ ...prev, richHtml: e.target.value }))}
+                                      placeholder="<div>Your custom HTML here...</div>"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="space-y-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Desktop URL</label>
+                                        <div className="flex gap-1">
+                                          <input
+                                            type="text"
+                                            className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.richDesktop || ''}
+                                            onChange={(e) => setContent(prev => ({ ...prev, richDesktop: e.target.value }))}
+                                            placeholder="https://..."
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const input = document.getElementById('image-upload') as any;
+                                              input.dataset.currentId = 'richDesktop';
+                                              input.click();
+                                            }}
+                                            className="bg-brand-blue hover:bg-black text-white px-2 py-1 rounded-lg text-[7px] font-black uppercase"
+                                          >Upload</button>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Tablet URL</label>
+                                        <div className="flex gap-1">
+                                          <input
+                                            type="text"
+                                            className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.richTablet || ''}
+                                            onChange={(e) => setContent(prev => ({ ...prev, richTablet: e.target.value }))}
+                                            placeholder="https://..."
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const input = document.getElementById('image-upload') as any;
+                                              input.dataset.currentId = 'richTablet';
+                                              input.click();
+                                            }}
+                                            className="bg-brand-blue hover:bg-black text-white px-2 py-1 rounded-lg text-[7px] font-black uppercase"
+                                          >Upload</button>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Mobile URL</label>
+                                        <div className="flex gap-1">
+                                          <input
+                                            type="text"
+                                            className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.richMobile || ''}
+                                            onChange={(e) => setContent(prev => ({ ...prev, richMobile: e.target.value }))}
+                                            placeholder="https://..."
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const input = document.getElementById('image-upload') as any;
+                                              input.dataset.currentId = 'richMobile';
+                                              input.click();
+                                            }}
+                                            className="bg-brand-blue hover:bg-black text-white px-2 py-1 rounded-lg text-[7px] font-black uppercase"
+                                          >Upload</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Link URL</label>
+                                        <input
+                                          type="text"
+                                          className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                          value={content.richLink || ''}
+                                          onChange={(e) => setContent(prev => ({ ...prev, richLink: e.target.value }))}
+                                          placeholder="https://..."
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Fit</label>
+                                          <select
+                                            className="w-full bg-white border border-gray-200 px-2 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.richSize || 'cover'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, richSize: e.target.value }))}
+                                          >
+                                            <option value="cover">Cover</option>
+                                            <option value="centered">Contain</option>
+                                            <option value="stretch">Stretch</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Position</label>
+                                          <select
+                                            className="w-full bg-white border border-gray-200 px-2 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.richPosition || 'center'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, richPosition: e.target.value }))}
+                                          >
+                                            <option value="center">Center</option>
+                                            <option value="top">Top</option>
+                                            <option value="bottom">Bottom</option>
+                                            <option value="left">Left</option>
+                                            <option value="right">Right</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Text Size (px)</label>
+                                        <input
+                                          type="number"
+                                          min="8"
+                                          max="72"
+                                          className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                          value={content.richTextSize || '14'}
+                                          onChange={(e) => setContent(prev => ({ ...prev, richTextSize: e.target.value }))}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Text Color</label>
+                                        <div className="flex gap-1">
+                                          <input
+                                            type="color"
+                                            className="w-8 h-8 rounded-xl border border-gray-200 cursor-pointer"
+                                            value={content.richTextColor || '#FFFFFF'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, richTextColor: e.target.value }))}
+                                          />
+                                          <input
+                                            type="text"
+                                            className="flex-1 bg-white border border-gray-200 px-2 py-1 rounded-xl font-bold text-[10px] text-black uppercase"
+                                            value={content.richTextColor || '#FFFFFF'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, richTextColor: e.target.value }))}
+                                            placeholder="#FFFFFF"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                               
                               {/* Title Customizer */}
                               <div className="space-y-3 pb-3 border-b border-gray-100">
@@ -3195,6 +3665,181 @@ export default function AdminDashboard() {
                             {/* Section 6: Fundraising Section */}
                             <div className="bg-white p-6 rounded-3xl border border-gray-150 shadow-sm space-y-4">
                               <h6 className="text-[10px] font-black uppercase tracking-wider text-brand-blue">6. Fundraising Section</h6>
+
+                              {/* Background Banner Controls */}
+                              <div className="space-y-3 pb-3 border-b border-gray-100">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 block">Background Banner</span>
+                                <div className="flex bg-gray-200/80 rounded-2xl p-1.5 self-stretch md:self-auto w-fit">
+                                  {[
+                                    { label: "Creative Asset", val: "media" },
+                                    { label: "HTML / Script", val: "html" }
+                                  ].map((mode) => (
+                                    <button
+                                      type="button"
+                                      key={mode.val}
+                                      onClick={() => setContent(prev => ({ ...prev, fundraisingBgType: mode.val }))}
+                                      className={`px-4 py-2 rounded-xl font-black text-[8px] uppercase tracking-wider transition-all ${
+                                        (content.fundraisingBgType || "media") === mode.val
+                                          ? "bg-black text-white shadow-md"
+                                          : "text-gray-400 hover:text-black"
+                                      }`}
+                                    >
+                                      {mode.label}
+                                    </button>
+                                  ))}
+                                </div>
+                                {(content.fundraisingBgType || "media") === "html" ? (
+                                  <div>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">HTML / Embed Code</label>
+                                    <textarea
+                                      rows={4}
+                                      className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl font-mono text-xs text-black"
+                                      value={content.fundraisingBgHtml || ''}
+                                      onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgHtml: e.target.value }))}
+                                      placeholder="<div>Your custom HTML here...</div>"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="space-y-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Desktop URL</label>
+                                        <div className="flex gap-1">
+                                          <input
+                                            type="text"
+                                            className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.fundraisingBgDesktop || ''}
+                                            onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgDesktop: e.target.value }))}
+                                            placeholder="https://..."
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const input = document.getElementById('image-upload') as any;
+                                              input.dataset.currentId = 'fundraisingBgDesktop';
+                                              input.click();
+                                            }}
+                                            className="bg-brand-blue hover:bg-black text-white px-2 py-1 rounded-lg text-[7px] font-black uppercase"
+                                          >Upload</button>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Tablet URL</label>
+                                        <div className="flex gap-1">
+                                          <input
+                                            type="text"
+                                            className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.fundraisingBgTablet || ''}
+                                            onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgTablet: e.target.value }))}
+                                            placeholder="https://..."
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const input = document.getElementById('image-upload') as any;
+                                              input.dataset.currentId = 'fundraisingBgTablet';
+                                              input.click();
+                                            }}
+                                            className="bg-brand-blue hover:bg-black text-white px-2 py-1 rounded-lg text-[7px] font-black uppercase"
+                                          >Upload</button>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Mobile URL</label>
+                                        <div className="flex gap-1">
+                                          <input
+                                            type="text"
+                                            className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.fundraisingBgMobile || ''}
+                                            onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgMobile: e.target.value }))}
+                                            placeholder="https://..."
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const input = document.getElementById('image-upload') as any;
+                                              input.dataset.currentId = 'fundraisingBgMobile';
+                                              input.click();
+                                            }}
+                                            className="bg-brand-blue hover:bg-black text-white px-2 py-1 rounded-lg text-[7px] font-black uppercase"
+                                          >Upload</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Link URL</label>
+                                        <input
+                                          type="text"
+                                          className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                          value={content.fundraisingBgLink || ''}
+                                          onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgLink: e.target.value }))}
+                                          placeholder="https://..."
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Fit</label>
+                                          <select
+                                            className="w-full bg-white border border-gray-200 px-2 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.fundraisingBgSize || 'cover'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgSize: e.target.value }))}
+                                          >
+                                            <option value="cover">Cover</option>
+                                            <option value="centered">Contain</option>
+                                            <option value="stretch">Stretch</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Position</label>
+                                          <select
+                                            className="w-full bg-white border border-gray-200 px-2 py-2 rounded-xl font-bold text-[10px] text-black"
+                                            value={content.fundraisingBgPosition || 'center'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgPosition: e.target.value }))}
+                                          >
+                                            <option value="center">Center</option>
+                                            <option value="top">Top</option>
+                                            <option value="bottom">Bottom</option>
+                                            <option value="left">Left</option>
+                                            <option value="right">Right</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Text Size (px)</label>
+                                        <input
+                                          type="number"
+                                          min="8"
+                                          max="72"
+                                          className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl font-bold text-[10px] text-black"
+                                          value={content.fundraisingBgTextSize || '14'}
+                                          onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgTextSize: e.target.value }))}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Text Color</label>
+                                        <div className="flex gap-1">
+                                          <input
+                                            type="color"
+                                            className="w-8 h-8 rounded-xl border border-gray-200 cursor-pointer"
+                                            value={content.fundraisingBgTextColor || '#FFFFFF'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgTextColor: e.target.value }))}
+                                          />
+                                          <input
+                                            type="text"
+                                            className="flex-1 bg-white border border-gray-200 px-2 py-1 rounded-xl font-bold text-[10px] text-black uppercase"
+                                            value={content.fundraisingBgTextColor || '#FFFFFF'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, fundraisingBgTextColor: e.target.value }))}
+                                            placeholder="#FFFFFF"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                               
                               {/* Title Customizer */}
                               <div className="space-y-3 pb-3 border-b border-gray-100">
@@ -3246,7 +3891,7 @@ export default function AdminDashboard() {
                                   >B</button>
                                 </div>
                               </div>
-
+                              
                               {/* Description Customizer */}
                               <div className="space-y-3">
                                 <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 block">Description Styling</span>
@@ -4733,6 +5378,8 @@ export default function AdminDashboard() {
                       htmlKey: "adTopHtml",
                       sizeKey: "adTopSize",
                       positionKey: "adTopPosition",
+                      textSizeKey: "adTopTextSize",
+                      textColorKey: "adTopTextColor",
                       suggestedDems: { d: "1200x250", t: "768x200", m: "320x150" }
                     },
                     {
@@ -4747,6 +5394,8 @@ export default function AdminDashboard() {
                       htmlKey: "adMiddleHtml",
                       sizeKey: "adMiddleSize",
                       positionKey: "adMiddlePosition",
+                      textSizeKey: "adMiddleTextSize",
+                      textColorKey: "adMiddleTextColor",
                       suggestedDems: { d: "1200x250", t: "768x200", m: "320x150" }
                     },
                     {
@@ -4761,6 +5410,8 @@ export default function AdminDashboard() {
                       htmlKey: "adBottomHtml",
                       sizeKey: "adBottomSize",
                       positionKey: "adBottomPosition",
+                      textSizeKey: "adBottomTextSize",
+                      textColorKey: "adBottomTextColor",
                       suggestedDems: { d: "1200x250", t: "768x200", m: "320x150" }
                     }
                   ].map((slot) => {
@@ -4930,6 +5581,35 @@ export default function AdminDashboard() {
                                     <option value="right">Derecha</option>
                                   </select>
                                 </div>
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Text Size (px)</label>
+                                  <input
+                                    type="number"
+                                    min="8"
+                                    max="72"
+                                    className="w-full bg-white border-2 border-gray-100 focus:border-brand-blue px-5 py-4 rounded-xl font-bold text-xs focus:ring-0 text-black shadow-sm"
+                                    value={(content as any)[slot.textSizeKey] || '14'}
+                                    onChange={(e) => setContent(prev => ({ ...prev, [slot.textSizeKey]: e.target.value }))}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Text Color</label>
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="color"
+                                      className="w-12 h-12 rounded-xl border-2 border-gray-100 cursor-pointer"
+                                      value={(content as any)[slot.textColorKey] || '#FFFFFF'}
+                                      onChange={(e) => setContent(prev => ({ ...prev, [slot.textColorKey]: e.target.value }))}
+                                    />
+                                    <input
+                                      type="text"
+                                      className="flex-1 bg-white border-2 border-gray-100 focus:border-brand-blue px-5 py-4 rounded-xl font-bold text-xs focus:ring-0 text-black shadow-sm uppercase"
+                                      value={(content as any)[slot.textColorKey] || '#FFFFFF'}
+                                      onChange={(e) => setContent(prev => ({ ...prev, [slot.textColorKey]: e.target.value }))}
+                                      placeholder="#FFFFFF"
+                                    />
+                                  </div>
+                                </div>
                               </div>
 
                               <div className="md:col-span-3">
@@ -4958,6 +5638,79 @@ export default function AdminDashboard() {
                       </div>
                     );
                   })}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'rsvps' && (
+              <motion.div
+                key="rsvps"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+              >
+                <div className="bg-brand-gray/40 border border-gray-200/50 rounded-2xl p-6 sm:p-10">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h3 className="text-xl font-black tracking-tight">Event RSVPs</h3>
+                      <p className="text-sm text-gray-500 font-medium mt-1">{reservations.length} total reservation(s)</p>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const fresh = await getReservations();
+                        setReservations(fresh);
+                      }}
+                      className="bg-brand-blue text-white px-5 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase hover:bg-brand-blue/90 transition-all"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+
+                  {reservations.length === 0 ? (
+                    <div className="text-center py-20 text-gray-400">
+                      <UserPlus size={48} className="mx-auto mb-4 opacity-30" />
+                      <p className="font-bold text-lg">No RSVPs yet</p>
+                      <p className="text-sm">Reservations will appear here once people RSVP to events.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="border-b border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                            <th className="pb-4 pr-4">Name</th>
+                            <th className="pb-4 pr-4">Email</th>
+                            <th className="pb-4 pr-4">Phone</th>
+                            <th className="pb-4 pr-4">Event</th>
+                            <th className="pb-4 pr-4">Date</th>
+                            <th className="pb-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reservations.map((res: any) => (
+                            <tr key={res._id} className="border-b border-gray-100 last:border-0">
+                              <td className="py-4 pr-4 font-bold text-sm">{res.name}</td>
+                              <td className="py-4 pr-4 text-sm text-gray-600">{res.email}</td>
+                              <td className="py-4 pr-4 text-sm text-gray-600">{res.phone || '—'}</td>
+                              <td className="py-4 pr-4 text-sm text-gray-600">{res.eventTitle}</td>
+                              <td className="py-4 pr-4 text-sm text-gray-600">{new Date(res.createdAt).toLocaleDateString()}</td>
+                              <td className="py-4 text-right">
+                                <button
+                                  onClick={async () => {
+                                    if (!confirm('Delete this RSVP?')) return;
+                                    await deleteReservation(res._id);
+                                    setReservations(prev => prev.filter(r => r._id !== res._id));
+                                  }}
+                                  className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}

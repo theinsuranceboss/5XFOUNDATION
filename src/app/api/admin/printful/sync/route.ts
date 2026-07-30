@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, batchUploadStorage, uploadDbToSupabase, ensureDb } from '@/lib/db';
+import { db, batchUploadStorage, ensureDb } from '@/lib/db';
 import { fetchSyncProducts, fetchProductDetails } from '@/lib/printful';
 
 // Color hex helper for Printful imports
@@ -203,9 +203,6 @@ export async function POST() {
       }
       return count;
     });
-
-    // 3. Upload the fully updated SQLite database file exactly once back to Supabase
-    await uploadDbToSupabase();
 
     return NextResponse.json({ success: true, synced: successCount });
   } catch (error: any) {

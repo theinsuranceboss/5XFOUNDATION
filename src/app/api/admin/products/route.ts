@@ -1,4 +1,4 @@
-import { db, batchUploadStorage, uploadDbToSupabase } from '@/lib/db';
+import { db, batchUploadStorage } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -87,9 +87,6 @@ export async function PUT(req: NextRequest) {
       });
     });
 
-    // Upload the final SQLite file once to Supabase Storage
-    await uploadDbToSupabase();
-
     return NextResponse.json(product);
   } catch (error) {
     console.error('Error updating product:', error);
@@ -111,9 +108,6 @@ export async function DELETE(req: NextRequest) {
       await db.productVariant.deleteMany({ where: { productId: id } });
       await db.product.delete({ where: { id } });
     });
-
-    // Upload the final SQLite file once to Supabase Storage
-    await uploadDbToSupabase();
 
     return NextResponse.json({ deleted: true });
   } catch (error) {

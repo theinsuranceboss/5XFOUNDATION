@@ -209,9 +209,11 @@ interface AdBannerProps {
   slotName: string;
   fit?: string;
   position?: string;
+  textSize?: string;
+  textColor?: string;
 }
 
-function AdBanner({ type, desktop, tablet, mobile, link, html, slotName, fit, position }: AdBannerProps) {
+function AdBanner({ type, desktop, tablet, mobile, link, html, slotName, fit, position, textSize, textColor }: AdBannerProps) {
   const hasMedia = desktop?.trim() || tablet?.trim() || mobile?.trim();
   const hasHtml = html?.trim();
 
@@ -267,21 +269,35 @@ function AdBanner({ type, desktop, tablet, mobile, link, html, slotName, fit, po
     );
   };
 
+  const textOverlayStyle: any = {
+    fontSize: textSize ? `${textSize}px` : '14px',
+    color: textColor || '#FFFFFF',
+  };
+
   const bannerContent = (
     <div className="relative w-full overflow-hidden rounded-2xl shadow-lg border border-gray-100/50 bg-gray-50 flex items-center justify-center group cursor-pointer">
       {/* Vista Desktop */}
-      <div className="hidden lg:block w-full aspect-[1200/250] pointer-events-none">
+      <div className="hidden lg:block w-full aspect-[1200/250] relative">
         <MediaElement src={desktopSrc} className="rounded-2xl" />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={textOverlayStyle}>
+          {slotName}
+        </div>
       </div>
       
       {/* Vista Tablet */}
-      <div className="hidden md:block lg:hidden w-full aspect-[768/200] pointer-events-none">
+      <div className="hidden md:block lg:hidden w-full aspect-[768/200] relative">
         <MediaElement src={tabletSrc} className="rounded-2xl" />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={textOverlayStyle}>
+          {slotName}
+        </div>
       </div>
 
       {/* Vista Móvil */}
-      <div className="block md:hidden w-full aspect-[320/150] pointer-events-none">
+      <div className="block md:hidden w-full aspect-[320/150] relative">
         <MediaElement src={mobileSrc} className="rounded-2xl" />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={textOverlayStyle}>
+          {slotName}
+        </div>
       </div>
     </div>
   );
@@ -345,7 +361,31 @@ export default function Home() {
     hero_3: "/hero_3.png",
     hero_gdrive_link: "https://drive.google.com/drive/folders/1c46Rf9ajwya3DsUwNbVoLtsp09v42trD?usp=sharing",
     rich: "/rich.png",
+    richType: "media",
+    richDesktop: "",
+    richTablet: "",
+    richMobile: "",
+    richLink: "",
+    richHtml: "",
+    richSize: "cover",
+    richPosition: "center",
+    richTextSize: "14",
+    richTextColor: "#FFFFFF",
+    richLayout: "full",
+    richPlacement: "center",
     fundraisingBg: "",
+    fundraisingBgType: "media",
+    fundraisingBgDesktop: "",
+    fundraisingBgTablet: "",
+    fundraisingBgMobile: "",
+    fundraisingBgLink: "",
+    fundraisingBgHtml: "",
+    fundraisingBgSize: "cover",
+    fundraisingBgPosition: "center",
+    fundraisingBgTextSize: "14",
+    fundraisingBgTextColor: "#FFFFFF",
+    fundraisingBgLayout: "full",
+    fundraisingBgPlacement: "center",
     themeFontFamily: "Inter",
     themeHeadingCase: "uppercase",
     themeFontSize: "16",
@@ -446,6 +486,8 @@ export default function Home() {
     adTopHtml: "",
     adTopSize: "fill",
     adTopPosition: "center",
+    adTopTextSize: "14",
+    adTopTextColor: "#FFFFFF",
     adMiddleType: "media",
     adMiddleDesktop: "",
     adMiddleTablet: "",
@@ -454,6 +496,8 @@ export default function Home() {
     adMiddleHtml: "",
     adMiddleSize: "fill",
     adMiddlePosition: "center",
+    adMiddleTextSize: "14",
+    adMiddleTextColor: "#FFFFFF",
     adBottomType: "media",
     adBottomDesktop: "",
     adBottomTablet: "",
@@ -462,13 +506,15 @@ export default function Home() {
     adBottomHtml: "",
     adBottomSize: "fill",
     adBottomPosition: "center",
+    adBottomTextSize: "14",
+    adBottomTextColor: "#FFFFFF",
   });
 
   const [stories, setStories] = useState([
     {
       id: 'connor',
       name: 'Connor Young',
-      tag: 'Ewing Sarcoma Survivor',
+      tag: '',
       journey: 'Connor is a courageous 5-year-old from Illinois battling Ewing Sarcoma, a rare and aggressive cancer. After 15+ rounds of chemotherapy and a life-changing rotationplasty surgery, Connor continues to fight with incredible strength.',
       help: 'Through the Five Time Foundation™, we’ve raised funds to bring Connor and his family to A Step Ahead Prosthetics, where he’ll receive a world-class prosthetic giving him the freedom to move, play, and just be a kid again.',
       img: `https://drive.google.com/drive/folders/1JQ0x7yNQZONjYHDjgOGgjah8srTl9Lpk?usp=sharing`
@@ -963,6 +1009,8 @@ export default function Home() {
         slotName="top"
         fit={content.adTopSize}
         position={content.adTopPosition}
+        textSize={content.adTopTextSize}
+        textColor={content.adTopTextColor}
       />
 
       {/* Our Mission Section */}
@@ -1057,18 +1105,38 @@ export default function Home() {
 
             {/* Founder Image Container */}
             <motion.div {...fadeInUp} transition={{ delay: 0.2 }} className="relative">
-              <div className="aspect-[4/5] rounded-[3rem] overflow-hidden bg-brand-gray shadow-2xl relative">
-                <img 
-                  src={content.rich || `/rich.png?v=${v}`} 
-                  alt="Rich Canci - 5X Cancer Foundation Founder" 
-                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                />
+              {(() => {
+                const rType = content.richType || "media";
+                const rDesktop = content.richDesktop?.trim() || content.rich?.trim() || "";
+                const rTablet = content.richTablet?.trim() || rDesktop;
+                const rMobile = content.richMobile?.trim() || rTablet;
+                const rHasMedia = rDesktop || rTablet || rMobile;
+                const rHasHtml = content.richHtml?.trim();
+                const rLink = content.richLink?.trim();
+                const formattedRLink = rLink ? (/^(https?:\/\/|\/|#|mailto:|tel:)/i.test(rLink) ? rLink : `https://${rLink}`) : "";
 
-                
-                {/* 6X Survivor Badge */}
-                <div className="absolute bottom-[-20px] right-[-20px] bg-black text-white p-8 md:p-10 rounded-3xl shadow-2xl border-4 border-white transition-transform hover:scale-105">
-                  <div className="text-4xl md:text-5xl font-black mb-1">6X</div>
-                </div>
+                if (rType === "html" && rHasHtml) {
+                  return (
+                    <div className="aspect-[4/5] rounded-[3rem] overflow-hidden bg-brand-gray shadow-2xl relative flex items-center justify-center" dangerouslySetInnerHTML={{ __html: content.richHtml }} />
+                  );
+                }
+
+                const fitStyle = content.richSize === 'centered' ? 'contain' : content.richSize === 'stretch' ? 'fill' : 'cover';
+
+                const imgContent = (
+                  <div className="aspect-[4/5] rounded-[3rem] overflow-hidden bg-brand-gray shadow-2xl relative">
+                    {rDesktop && <img src={rDesktop} alt="Rich Canci - 5X Cancer Foundation Founder" className="hidden lg:block w-full h-full transition-transform duration-700 hover:scale-105" style={{ objectFit: fitStyle as any, objectPosition: content.richPosition || 'center' }} />}
+                    {rTablet && <img src={rTablet} alt="Rich Canci - 5X Cancer Foundation Founder" className="hidden md:block lg:hidden w-full h-full transition-transform duration-700 hover:scale-105" style={{ objectFit: fitStyle as any, objectPosition: content.richPosition || 'center' }} />}
+                    {rMobile && <img src={rMobile} alt="Rich Canci - 5X Cancer Foundation Founder" className="block md:hidden w-full h-full transition-transform duration-700 hover:scale-105" style={{ objectFit: fitStyle as any, objectPosition: content.richPosition || 'center' }} />}
+                    {formattedRLink ? <a href={formattedRLink} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10" /> : null}
+                  </div>
+                );
+
+                return imgContent;
+              })()}
+              {/* 6X Survivor Badge */}
+              <div className="absolute bottom-[-20px] right-[-20px] bg-black text-white p-8 md:p-10 rounded-3xl shadow-2xl border-4 border-white transition-transform hover:scale-105">
+                <div className="text-4xl md:text-5xl font-black mb-1">6X</div>
               </div>
             </motion.div>
           </div>
@@ -1085,6 +1153,8 @@ export default function Home() {
         slotName="middle"
         fit={content.adMiddleSize}
         position={content.adMiddlePosition}
+        textSize={content.adMiddleTextSize}
+        textColor={content.adMiddleTextColor}
       />
 
       {/* Survivor Stories Section */}
@@ -1127,9 +1197,9 @@ export default function Home() {
                   className="w-full lg:w-2/5 aspect-[4/5] rounded-[3rem] overflow-hidden bg-white/5 shadow-2xl relative group border border-white/10"
                 >
                   <StorySlideshow source={story.img} name={story.name} v={v} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-10 flex flex-col justify-end">
-                     <p className="text-brand-blue font-black text-xs uppercase tracking-widest">{story.tag}</p>
-                  </div>
+                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-10 flex flex-col justify-end">
+                      {story.tag && <p className="text-brand-blue font-black text-xs uppercase tracking-widest">{story.tag}</p>}
+                   </div>
                 </motion.div>
                 <motion.div {...fadeInUp} className="flex-1 space-y-8">
                   <div className="space-y-4">
@@ -1150,33 +1220,71 @@ export default function Home() {
       </section>
 
       {/* How We Raise Funds Section */}
-      <section 
-        className="py-32 bg-[#1A1C23] text-white px-6 md:px-24 relative overflow-hidden"
-        style={{
-          backgroundImage: content.fundraisingBg ? `url(${content.fundraisingBg})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        {content.fundraisingBg && (
-          <div className="absolute inset-0 bg-black/75 z-0" />
-        )}
-        <div className="max-w-5xl mx-auto text-center space-y-12 relative z-10">
-          <motion.h2 {...fadeInUp} className="s-fundraising-title tracking-tighter uppercase italic leading-none">{content.fundraisingTitle}</motion.h2>
-          <motion.p {...fadeInUp} className="s-fundraising-desc leading-relaxed max-w-3xl mx-auto">
-            {content.fundraisingDesc}
-          </motion.p>
-          <motion.div {...fadeInUp} className="pt-8 flex justify-center">
-            <Link
-              href="/merch"
-              className="bg-white/10 backdrop-blur-md border-2 border-white/20 text-white font-black text-xl uppercase tracking-[0.2em] px-16 py-8 hover:bg-brand-blue hover:border-brand-blue transition-all flex items-center justify-center gap-4 group"
-            >
-              <span>Shop Merchandise</span>
-              <div className="w-4 h-4 bg-brand-blue group-hover:bg-white transition-colors" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+      {(() => {
+        const fbType = content.fundraisingBgType || "media";
+        const fbDesktop = content.fundraisingBgDesktop?.trim() || content.fundraisingBg?.trim() || "";
+        const fbTablet = content.fundraisingBgTablet?.trim() || fbDesktop;
+        const fbMobile = content.fundraisingBgMobile?.trim() || fbTablet;
+        const fbHasMedia = fbDesktop || fbTablet || fbMobile;
+        const fbHasHtml = content.fundraisingBgHtml?.trim();
+        const fbLink = content.fundraisingBgLink?.trim();
+        const formattedFbLink = fbLink ? (/^(https?:\/\/|\/|#|mailto:|tel:)/i.test(fbLink) ? fbLink : `https://${fbLink}`) : "";
+
+        if (fbType === "html" && fbHasHtml) {
+          return (
+            <section className="py-32 bg-[#1A1C23] text-white px-6 md:px-24 relative overflow-hidden">
+              <div className="w-full overflow-hidden flex justify-center items-center" dangerouslySetInnerHTML={{ __html: content.fundraisingBgHtml }} />
+            </section>
+          );
+        }
+
+        if (!fbHasMedia) {
+          return (
+            <section className="py-32 bg-[#1A1C23] text-white px-6 md:px-24 relative overflow-hidden">
+              <div className="max-w-5xl mx-auto text-center space-y-12 relative z-10">
+                <motion.h2 {...fadeInUp} className="s-fundraising-title tracking-tighter uppercase italic leading-none">{content.fundraisingTitle}</motion.h2>
+                <motion.p {...fadeInUp} className="s-fundraising-desc leading-relaxed max-w-3xl mx-auto">{content.fundraisingDesc}</motion.p>
+                <motion.div {...fadeInUp} className="pt-8 flex justify-center">
+                  <Link href="/merch" className="bg-white/10 backdrop-blur-md border-2 border-white/20 text-white font-black text-xl uppercase tracking-[0.2em] px-16 py-8 hover:bg-brand-blue hover:border-brand-blue transition-all flex items-center justify-center gap-4 group">
+                    <span>Shop Merchandise</span>
+                    <div className="w-4 h-4 bg-brand-blue group-hover:bg-white transition-colors" />
+                  </Link>
+                </motion.div>
+              </div>
+            </section>
+          );
+        }
+
+        const fbBgSize = content.fundraisingBgSize === 'centered' ? 'contain' : content.fundraisingBgSize === 'stretch' ? '100% 100%' : 'cover';
+        const fbBgPosition = content.fundraisingBgPosition || 'center';
+
+        const sectionContent = (
+          <section className="py-32 bg-[#1A1C23] text-white px-6 md:px-24 relative overflow-hidden">
+            {/* Desktop background */}
+            <div className="hidden lg:block absolute inset-0" style={{ backgroundImage: `url(${fbDesktop})`, backgroundSize: fbBgSize, backgroundPosition: fbBgPosition, backgroundRepeat: 'no-repeat' }} />
+            {/* Tablet background */}
+            <div className="hidden md:block lg:hidden absolute inset-0" style={{ backgroundImage: `url(${fbTablet})`, backgroundSize: fbBgSize, backgroundPosition: fbBgPosition, backgroundRepeat: 'no-repeat' }} />
+            {/* Mobile background */}
+            <div className="block md:hidden absolute inset-0" style={{ backgroundImage: `url(${fbMobile})`, backgroundSize: fbBgSize, backgroundPosition: fbBgPosition, backgroundRepeat: 'no-repeat' }} />
+            <div className="absolute inset-0 bg-black/75 z-0" />
+            {formattedFbLink && (
+              <a href={formattedFbLink} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-[1]" />
+            )}
+            <div className="max-w-5xl mx-auto text-center space-y-12 relative z-10">
+              <motion.h2 {...fadeInUp} className="s-fundraising-title tracking-tighter uppercase italic leading-none">{content.fundraisingTitle}</motion.h2>
+              <motion.p {...fadeInUp} className="s-fundraising-desc leading-relaxed max-w-3xl mx-auto">{content.fundraisingDesc}</motion.p>
+              <motion.div {...fadeInUp} className="pt-8 flex justify-center">
+                <Link href="/merch" className="bg-white/10 backdrop-blur-md border-2 border-white/20 text-white font-black text-xl uppercase tracking-[0.2em] px-16 py-8 hover:bg-brand-blue hover:border-brand-blue transition-all flex items-center justify-center gap-4 group">
+                  <span>Shop Merchandise</span>
+                  <div className="w-4 h-4 bg-brand-blue group-hover:bg-white transition-colors" />
+                </Link>
+              </motion.div>
+            </div>
+          </section>
+        );
+
+        return sectionContent;
+      })()}
 
       {/* Fuel the Fight - Donation Section */}
       <section id="donate" className="py-32 bg-gray-50 px-6 md:px-24">
@@ -1207,6 +1315,8 @@ export default function Home() {
         slotName="bottom"
         fit={content.adBottomSize}
         position={content.adBottomPosition}
+        textSize={content.adBottomTextSize}
+        textColor={content.adBottomTextColor}
       />
     </div>
   );

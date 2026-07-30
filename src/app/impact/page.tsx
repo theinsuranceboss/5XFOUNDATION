@@ -174,7 +174,7 @@ export default function ImpactPage() {
                 <div className="pt-8 border-t border-gray-100 flex items-center justify-between">
                   <div>
                     <p className="text-2xl font-black">{story.name}</p>
-                    <p className="text-xs font-bold uppercase tracking-widest text-brand-blue mt-1">{story.tag}</p>
+                    {story.tag && <p className="text-xs font-bold uppercase tracking-widest text-brand-blue mt-1">{story.tag}</p>}
                   </div>
                   <button className="p-4 bg-brand-gray rounded-full hover:bg-brand-blue hover:text-white transition-all group">
                     <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform" />
