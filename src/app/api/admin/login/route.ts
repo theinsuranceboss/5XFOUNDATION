@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexQuery } from '@/lib/convexClient';
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,7 +7,7 @@ export async function POST(req: NextRequest) {
     if (!username || !password) {
       return NextResponse.json({ success: false, error: 'Missing credentials' }, { status: 400 });
     }
-    const user = await convexClient.query(api.admin.login, { username, password });
+    const user = await convexQuery('admin:login', { username, password });
     if (!user) {
       return NextResponse.json({ success: false, error: 'Invalid credentials' });
     }

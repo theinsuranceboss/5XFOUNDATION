@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexMutation } from '@/lib/convexClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,25 +11,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const productId = await convexClient.mutation(api.products.create, {
+    const productId = await convexMutation('products:create', {
       title,
       description,
       price: parseFloat(price),
       compareAt: compareAt ? parseFloat(compareAt) : undefined,
-      categoryId: categoryId as any,
+      categoryId,
     });
 
     for (const img of (images || [])) {
-      await convexClient.mutation(api.products.addImage, {
-        productId: productId as any,
+      await convexMutation('products:addImage', {
+        productId,
         url: img.url,
         type: img.type,
         order: img.order,
       });
     }
     for (const v of (variants || [])) {
-      await convexClient.mutation(api.products.addVariant, {
-        productId: productId as any,
+      await convexMutation('products:addVariant', {
+        productId,
         color: v.color,
         size: v.size,
         stock: parseInt(String(v.stock)) || 0,
@@ -53,29 +52,29 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    await convexClient.mutation(api.products.update, {
-      id: id as any,
+    await convexMutation('products:update', {
+      id,
       title,
       description,
       price: parseFloat(price),
       compareAt: compareAt ? parseFloat(compareAt) : undefined,
-      categoryId: categoryId as any,
+      categoryId,
     });
 
-    await convexClient.mutation(api.products.removeAllImages, { productId: id as any });
-    await convexClient.mutation(api.products.removeAllVariants, { productId: id as any });
+    await convexMutation('products:removeAllImages', { productId: id });
+    await convexMutation('products:removeAllVariants', { productId: id });
 
     for (const img of (images || [])) {
-      await convexClient.mutation(api.products.addImage, {
-        productId: id as any,
+      await convexMutation('products:addImage', {
+        productId: id,
         url: img.url,
         type: img.type,
         order: img.order,
       });
     }
     for (const v of (variants || [])) {
-      await convexClient.mutation(api.products.addVariant, {
-        productId: id as any,
+      await convexMutation('products:addVariant', {
+        productId: id,
         color: v.color,
         size: v.size,
         stock: parseInt(String(v.stock)) || 0,
@@ -97,7 +96,7 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
-    await convexClient.mutation(api.products.remove, { id: id as any });
+    await convexMutation('products:remove', { id });
     return NextResponse.json({ deleted: true });
   } catch (error) {
     console.error('Error deleting product:', error);

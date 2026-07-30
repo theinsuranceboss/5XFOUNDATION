@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexQuery } from '@/lib/convexClient';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const orders = await convexClient.query(api.orders.list) as any[];
+    const orders = await convexQuery('orders:list') as any[];
 
     const completedOrders = orders.filter((o: any) => o.status === 'completed');
 

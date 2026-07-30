@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { convexQuery, convexMutation } from '@/lib/convex';
+import { convexQuery, convexMutation } from '@/lib/convexClient';
 
 export const dynamic = 'force-dynamic';
 

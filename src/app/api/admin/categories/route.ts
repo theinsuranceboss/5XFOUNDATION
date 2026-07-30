@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexMutation } from '@/lib/convexClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +10,7 @@ export async function POST(req: NextRequest) {
     if (!name || !slug) {
       return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
     }
-    const id = await convexClient.mutation(api.categories.create, { name, slug, order: order || 0 });
+    const id = await convexMutation('categories:create', { name, slug, order: order || 0 });
     return NextResponse.json({ id, success: true });
   } catch (error) {
     console.error('Error creating category:', error);
@@ -26,8 +25,8 @@ export async function PUT(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
     }
-    await convexClient.mutation(api.categories.update, {
-      id: id as any,
+    await convexMutation('categories:update', {
+      id,
       name,
       slug,
       order: order ?? undefined,
@@ -46,7 +45,7 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
     }
-    await convexClient.mutation(api.categories.remove, { id: id as any });
+    await convexMutation('categories:remove', { id });
     return NextResponse.json({ deleted: true });
   } catch (error) {
     console.error('Error deleting category:', error);

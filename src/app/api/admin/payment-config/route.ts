@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexQuery, convexMutation } from '@/lib/convexClient';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const configs = await convexClient.query(api.paymentConfigs.list);
+    const configs = await convexQuery('paymentConfigs:list');
     return NextResponse.json(configs);
   } catch (error) {
     console.error('Error fetching payment configs:', error);
@@ -21,7 +20,7 @@ export async function PUT(req: NextRequest) {
     if (!provider) {
       return NextResponse.json({ error: 'Provider is required' }, { status: 400 });
     }
-    const config = await convexClient.mutation(api.paymentConfigs.upsert, {
+    const config = await convexMutation('paymentConfigs:upsert', {
       provider,
       apiKey: apiKey || undefined,
       link: link || undefined,

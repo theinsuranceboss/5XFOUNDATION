@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { convexQuery, convexMutation } from '@/lib/convex';
+import { convexQuery, convexMutation } from '@/lib/convexClient';
 import { fetchSyncProducts, fetchProductDetails } from '@/lib/printful';
 
 const getColorHex = (colorName: string): string => {
