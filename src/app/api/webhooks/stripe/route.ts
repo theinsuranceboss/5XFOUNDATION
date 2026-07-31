@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { convexClient } from '@/lib/convex';
-import { api } from '@convex/_generated/api';
+import { convexQuery, convexMutation } from '@/lib/convexClient';
 import { createPrintfulOrder } from '@/lib/printful';
 import crypto from 'crypto';
 
@@ -38,7 +37,7 @@ export async function POST(req: NextRequest) {
       const cartSessionId = session.metadata?.cart_session_id;
 
       if (cartSessionId) {
-        const cartItems: any = await convexClient.query(api.cart.getCart, { sessionId: cartSessionId });
+        const cartItems: any = await convexQuery('cart:getCart', { sessionId: cartSessionId });
 
         if (cartItems && cartItems.length > 0) {
           const printfulOrder = {
@@ -65,7 +64,7 @@ export async function POST(req: NextRequest) {
             const name = session.shipping_details?.name || session.customer_details?.name || 'Unknown';
             const total = session.amount_total ? session.amount_total / 100 : cartItems.reduce((sum: number, item: any) => sum + (item.product?.price || 0) * item.quantity, 0);
 
-            await convexClient.mutation(api.orders.create, {
+            await convexMutation('orders:create', {
               email,
               name,
               total,
@@ -80,7 +79,7 @@ export async function POST(req: NextRequest) {
               })),
             });
 
-            await convexClient.mutation(api.cart.clearCart, { sessionId: cartSessionId });
+            await convexMutation('cart:clearCart', { sessionId: cartSessionId });
           } catch (e) {
             console.error('Failed to create Printful order / DB order:', e);
           }
