@@ -2,7 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, frequency } = await req.json();
+    const url = new URL(req.url);
+    let amount = url.searchParams.get('amount');
+    let frequency = url.searchParams.get('frequency');
+
+    if (!amount) {
+      const bodyHeader = req.headers.get('x-parsed-body');
+      if (bodyHeader) {
+        try {
+          const parsed = JSON.parse(bodyHeader);
+          amount = parsed.amount;
+          frequency = parsed.frequency;
+        } catch (e) {}
+      }
+    }
+
+    if (!amount) {
+      try {
+        const parsed = await req.json();
+        amount = parsed.amount;
+        frequency = parsed.frequency;
+      } catch (e) {}
+    }
 
     if (!amount || isNaN(parseFloat(amount))) {
       return NextResponse.json({ error: 'Valid amount is required' }, { status: 400 });

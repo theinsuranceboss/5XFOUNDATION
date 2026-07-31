@@ -4,7 +4,26 @@ import { api } from '@convex/_generated/api';
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId } = await req.json();
+    const url = new URL(req.url);
+    let sessionId = url.searchParams.get('sessionId');
+
+    if (!sessionId) {
+      const bodyHeader = req.headers.get('x-parsed-body');
+      if (bodyHeader) {
+        try {
+          const parsed = JSON.parse(bodyHeader);
+          sessionId = parsed.sessionId;
+        } catch (e) {}
+      }
+    }
+
+    if (!sessionId) {
+      try {
+        const parsed = await req.json();
+        sessionId = parsed.sessionId;
+      } catch (e) {}
+    }
+
     if (!sessionId) {
       return NextResponse.json({ error: 'sessionId is required' }, { status: 400 });
     }

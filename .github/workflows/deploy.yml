@@ -14,8 +14,9 @@ jobs:
       - run: npx netlify-cli deploy --build --prod
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: 72f7d517-a5bd-4b2c-a8af-a4aad5ca0498
+          NETLIFY_SITE_ID: 648e6acf-eb87-48b1-b670-6e1be3c14849
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          NEXT_PUBLIC_APP_URL: https://5xfoundation.netlify.app
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
           PRINTFUL_API_TOKEN: ${{ secrets.PRINTFUL_API_TOKEN }}
           PRINTFUL_STORE_ID: ${{ secrets.PRINTFUL_STORE_ID }}
