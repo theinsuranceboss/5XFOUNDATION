@@ -46,41 +46,62 @@ function buildStoryImg(transition: string, urls: string[]): string {
   return `transition:${transition}\n${filtered.join('\n')}`;
 }
 
+async function fetchDriveFolderImages(folderUrl: string): Promise<string[]> {
+  const folderIdMatch = folderUrl.match(/(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/);
+  if (!folderIdMatch) return [];
+  try {
+    const res = await fetch(`/api/gdrive?folderId=${folderIdMatch[1]}`);
+    const data = await res.json();
+    if (data.success && data.images && data.images.length > 0) {
+      return data.images.slice(0, 5);
+    }
+  } catch (err) {
+    console.error('[fetchDriveFolderImages] Failed:', err);
+  }
+  return [];
+}
+
 function StoryImagePreview({ source, name }: { source: string; name: string }) {
   const [previewUrl, setPreviewUrl] = useState<string>("/placeholder.png");
 
   useEffect(() => {
     let ignore = false;
     async function resolvePreview() {
-      const { urls } = parseStoryImg(source || "");
-      if (urls.length === 0) { setPreviewUrl("/placeholder.png"); return; }
+      const raw = source || "";
+      if (!raw.trim()) { setPreviewUrl("/placeholder.png"); return; }
 
-      const firstUrl = urls[0];
-      const gdriveFolderRegex = /(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/;
-      const folderMatch = firstUrl.match(gdriveFolderRegex);
-
-      if (folderMatch) {
-        const folderId = folderMatch[1];
-        try {
-          const res = await fetch(`/api/gdrive?folderId=${folderId}`);
-          const data = await res.json();
-          if (ignore) return;
-          if (data.success && data.images && data.images.length > 0) {
-            setPreviewUrl(data.images[0]);
-            return;
-          }
-        } catch (err) {
-          console.error("[StoryImagePreview] Fetch failed:", err);
+      const { urls } = parseStoryImg(raw);
+      if (urls.length > 0) {
+        const firstUrl = urls[0];
+        const gdriveFolderRegex = /(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/;
+        const folderMatch = firstUrl.match(gdriveFolderRegex);
+        if (folderMatch) {
+          try {
+            const res = await fetch(`/api/gdrive?folderId=${folderMatch[1]}`);
+            const data = await res.json();
+            if (ignore) return;
+            if (data.success && data.images && data.images.length > 0) { setPreviewUrl(data.images[0]); return; }
+          } catch {}
         }
-      }
-
-      const fileMatch = firstUrl.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
-      if (fileMatch) {
-        if (!ignore) setPreviewUrl(`/api/gdrive/image?id=${fileMatch[1]}&v=3`);
+        const fileMatch = firstUrl.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
+        if (fileMatch) { if (!ignore) setPreviewUrl(`/api/gdrive/image?id=${fileMatch[1]}&v=3`); return; }
+        if (!ignore) setPreviewUrl(firstUrl);
         return;
       }
 
-      if (!ignore) setPreviewUrl(firstUrl.includes('?') || firstUrl.startsWith('/') || firstUrl.startsWith('data:') ? firstUrl : `${firstUrl}?v=${Date.now()}`);
+      // Fallback: try resolving the raw source as a Drive folder URL directly
+      const gdriveFolderRegex = /(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/;
+      const folderMatch = raw.match(gdriveFolderRegex);
+      if (folderMatch) {
+        try {
+          const res = await fetch(`/api/gdrive?folderId=${folderMatch[1]}`);
+          const data = await res.json();
+          if (ignore) return;
+          if (data.success && data.images && data.images.length > 0) { setPreviewUrl(data.images[0]); return; }
+        } catch {}
+      }
+
+      if (!ignore) setPreviewUrl("/placeholder.png");
     }
 
     resolvePreview();
@@ -2568,7 +2589,7 @@ export default function AdminDashboard() {
                               <div className="grid grid-cols-3 gap-2">
                                 {storyImageUrls.map((url, imgIdx) => (
                                   <div key={imgIdx} className="aspect-square relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 group/thumb">
-                                    <img src={url} alt={`Slide ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                                    <img src={url} alt={`Slide ${imgIdx + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.png'; }} />
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -2613,14 +2634,17 @@ export default function AdminDashboard() {
                               </div>
                             )}
 
-                            {/* Manual URL textarea */}
-                            <div className="space-y-1">
-                              <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-gray-400">Image URLs (one per line)</label>
+                            {/* Google Drive Folder Fetch + Manual URL textarea */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-gray-400">Image URLs or Google Drive Folder Link</label>
+                              </div>
                               <textarea
                                 rows={3}
+                                data-story-id={story.id}
                                 className="w-full bg-gray-50 px-4 py-2 rounded-xl font-medium text-xs border border-gray-100 focus:ring-2 focus:ring-brand-blue transition-all"
-                                value={storyImageUrls.join('\n')}
-                                placeholder="Paste direct image URLs here (one per line)..."
+                                value={storyImageUrls.length > 0 ? storyImageUrls.join('\n') : (story.img || '').replace(/^transition:[^\n]*\n?/, '')}
+                                placeholder="Paste a Google Drive folder link, or direct image URLs (one per line)..."
                                 onChange={(e) => {
                                   const val = e.target.value;
                                   const newUrls = val.split('\n').map(l => l.trim()).filter(l => l.length > 0);
@@ -2630,6 +2654,7 @@ export default function AdminDashboard() {
                                   ));
                                 }}
                                 onBlur={() => {
+                                  const val = storyImageUrls.join('\n');
                                   const updatedImg = buildStoryImg(storyTransitionVal, storyImageUrls);
                                   const updatedStories = stories.map(s => s.id === story.id ? { ...s, img: updatedImg } : s);
                                   setStories(updatedStories);
@@ -2637,6 +2662,43 @@ export default function AdminDashboard() {
                                   localStorage.setItem('siteStories', JSON.stringify(updatedStories));
                                 }}
                               />
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  const textarea = document.querySelector(`[data-story-id="${story.id}"]`) as HTMLTextAreaElement;
+                                  const textVal = textarea ? textarea.value : storyImageUrls.join('\n');
+                                  const allLines = textVal.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                                  const driveLinks = allLines.filter(l => l.includes('drive.google.com'));
+                                  const otherLinks = allLines.filter(l => !l.includes('drive.google.com') && !l.startsWith('transition:'));
+
+                                  if (driveLinks.length === 0) {
+                                    alert('Paste a Google Drive folder link first, then click this button to fetch images.');
+                                    return;
+                                  }
+
+                                  let allImages: string[] = [];
+                                  for (const link of driveLinks) {
+                                    const images = await fetchDriveFolderImages(link);
+                                    allImages = [...allImages, ...images];
+                                  }
+                                  allImages = [...new Set(allImages)].slice(0, 5);
+
+                                  if (allImages.length === 0) {
+                                    alert('Could not fetch images from the Google Drive link. Make sure sharing is set to "Anyone with the link can view".');
+                                    return;
+                                  }
+
+                                  const finalUrls = [...otherLinks, ...allImages].slice(0, 5);
+                                  const updatedImg = buildStoryImg(storyTransitionVal, finalUrls);
+                                  const updatedStories = stories.map(s => s.id === story.id ? { ...s, img: updatedImg } : s);
+                                  setStories(updatedStories);
+                                  await updateSiteContent('siteStories', JSON.stringify(updatedStories));
+                                  localStorage.setItem('siteStories', JSON.stringify(updatedStories));
+                                }}
+                                className="w-full bg-green-600 text-white py-2 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-green-700 transition-all shadow-sm"
+                              >
+                                <FolderOpen size={12} /> Fetch Images from Google Drive
+                              </button>
                             </div>
                           </div>
 
