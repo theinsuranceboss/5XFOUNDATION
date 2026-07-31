@@ -53,7 +53,11 @@ async function fetchDriveFolderImages(folderUrl: string): Promise<string[]> {
     const res = await fetch(`/api/gdrive?folderId=${folderIdMatch[1]}`);
     const data = await res.json();
     if (data.success && data.images && data.images.length > 0) {
-      return data.images.slice(0, 5);
+      return data.images.slice(0, 5).map((imgUrl: string) => {
+        const idMatch = imgUrl.match(/id=([a-zA-Z0-9_-]{20,})/);
+        if (idMatch) return `https://lh3.googleusercontent.com/d/${idMatch[1]}=w800`;
+        return imgUrl;
+      });
     }
   } catch (err) {
     console.error('[fetchDriveFolderImages] Failed:', err);
@@ -71,37 +75,41 @@ function StoryImagePreview({ source, name }: { source: string; name: string }) {
       if (!raw.trim()) { setPreviewUrl("/placeholder.png"); return; }
 
       const { urls } = parseStoryImg(raw);
-      if (urls.length > 0) {
-        const firstUrl = urls[0];
-        const gdriveFolderRegex = /(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/;
-        const folderMatch = firstUrl.match(gdriveFolderRegex);
-        if (folderMatch) {
-          try {
-            const res = await fetch(`/api/gdrive?folderId=${folderMatch[1]}`);
-            const data = await res.json();
-            if (ignore) return;
-            if (data.success && data.images && data.images.length > 0) { setPreviewUrl(data.images[0]); return; }
-          } catch {}
-        }
-        const fileMatch = firstUrl.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
-        if (fileMatch) { if (!ignore) setPreviewUrl(`/api/gdrive/image?id=${fileMatch[1]}&v=3`); return; }
+      const firstUrl = urls.length > 0 ? urls[0] : raw;
+
+      // Direct lh3 URL - use as-is
+      if (firstUrl.includes('lh3.googleusercontent.com')) {
         if (!ignore) setPreviewUrl(firstUrl);
         return;
       }
 
-      // Fallback: try resolving the raw source as a Drive folder URL directly
+      // Google Drive folder URL - fetch and get first image
       const gdriveFolderRegex = /(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/;
-      const folderMatch = raw.match(gdriveFolderRegex);
+      const folderMatch = firstUrl.match(gdriveFolderRegex);
       if (folderMatch) {
         try {
           const res = await fetch(`/api/gdrive?folderId=${folderMatch[1]}`);
           const data = await res.json();
           if (ignore) return;
-          if (data.success && data.images && data.images.length > 0) { setPreviewUrl(data.images[0]); return; }
+          if (data.success && data.images && data.images.length > 0) {
+            const imgUrl = data.images[0];
+            const idMatch = imgUrl.match(/id=([a-zA-Z0-9_-]{20,})/);
+            if (idMatch) { setPreviewUrl(`https://lh3.googleusercontent.com/d/${idMatch[1]}=w400`); return; }
+            setPreviewUrl(imgUrl);
+            return;
+          }
         } catch {}
       }
 
-      if (!ignore) setPreviewUrl("/placeholder.png");
+      // Google Drive file ID
+      const fileMatch = firstUrl.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{20,})/);
+      if (fileMatch) { if (!ignore) setPreviewUrl(`https://lh3.googleusercontent.com/d/${fileMatch[1]}=w400`); return; }
+
+      // Proxy URL from scraper - convert to lh3
+      const proxyIdMatch = firstUrl.match(/\/api\/gdrive\/image\?id=([a-zA-Z0-9_-]{20,})/);
+      if (proxyIdMatch) { if (!ignore) setPreviewUrl(`https://lh3.googleusercontent.com/d/${proxyIdMatch[1]}=w400`); return; }
+
+      if (!ignore) setPreviewUrl(firstUrl);
     }
 
     resolvePreview();

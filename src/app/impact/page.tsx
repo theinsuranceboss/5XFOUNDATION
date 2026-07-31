@@ -51,7 +51,12 @@ function StorySlideshow({ source, name, v }: { source: string; name: string; v: 
           if (ignore) return;
 
           if (data.success && data.images && data.images.length > 0) {
-            setResolvedImages(data.images);
+            const resolved = data.images.map((imgUrl: string) => {
+              const idMatch = imgUrl.match(/id=([a-zA-Z0-9_-]{20,})/);
+              if (idMatch) return `https://lh3.googleusercontent.com/d/${idMatch[1]}=w800`;
+              return imgUrl;
+            });
+            setResolvedImages(resolved);
             return;
           }
         } catch (err) {
@@ -64,11 +69,11 @@ function StorySlideshow({ source, name, v }: { source: string; name: string; v: 
         .map(l => l.trim())
         .filter(l => l.length > 0 && !l.startsWith('transition:'))
         .map(l => {
-          const fileMatch = l.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
-          if (fileMatch) {
-            return `/api/gdrive/image?id=${fileMatch[1]}&v=3`;
-          }
-          return l.includes('?') || l.startsWith('/') || l.startsWith('data:') ? l : `${l}?v=${v}`;
+          const proxyIdMatch = l.match(/\/api\/gdrive\/image\?id=([a-zA-Z0-9_-]{20,})/);
+          if (proxyIdMatch) return `https://lh3.googleusercontent.com/d/${proxyIdMatch[1]}=w800`;
+          const fileMatch = l.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{20,})/);
+          if (fileMatch) return `https://lh3.googleusercontent.com/d/${fileMatch[1]}=w800`;
+          return l.includes('?') || l.startsWith('/') || l.startsWith('data:') || l.startsWith('http') ? l : `${l}?v=${v}`;
         });
 
       if (links.length > 0) {
