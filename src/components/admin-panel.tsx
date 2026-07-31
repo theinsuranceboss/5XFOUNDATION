@@ -1028,8 +1028,8 @@ function InventoryTab({
                 {/* Products Grid */}
                 <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
                   {group.products.map((product) => {
-                    const frontImage = product.images.find((img) => img.type === 'front')?.url || product.images[0]?.url;
-                    const backImage = product.images.find((img) => img.type === 'back')?.url || frontImage;
+                    const frontImage = getDisplayUrl(product.images.find((img) => img.type === 'front')?.url || product.images[0]?.url);
+                    const backImage = getDisplayUrl(product.images.find((img) => img.type === 'back')?.url || frontImage);
                     const isSelected = selectedProductIds.has(product.id);
 
                     return (

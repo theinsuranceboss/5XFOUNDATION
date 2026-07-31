@@ -12,6 +12,7 @@ import { Minus, Plus, ShoppingBag, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { getDisplayColor } from './product-card';
+import { getDisplayUrl } from '@/lib/utils';
 
 export function ProductDetail() {
   const { selectedProduct, setSelectedProduct, setIsCartOpen } = useStore();
@@ -212,7 +213,7 @@ export function ProductDetail() {
                 className="relative flex-1 min-h-[300px] w-full overflow-hidden rounded-3xl bg-white border border-gray-100 flex items-center justify-center p-6 shadow-sm"
               >
                 <img
-                  src={currentMainImage}
+                  src={getDisplayUrl(currentMainImage)}
                   alt={`${product.title} - ${viewType}`}
                   className="h-full w-full object-contain transition-all duration-300"
                 />
@@ -264,7 +265,7 @@ export function ProductDetail() {
                         isSelected ? 'border-blue-600 shadow-md ring-2 ring-blue-600 ring-offset-1' : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                       }`}
                     >
-                      <img src={img.url} alt="" className="h-full w-full object-contain p-1" />
+                      <img src={getDisplayUrl(img.url)} alt="" className="h-full w-full object-contain p-1" />
                     </button>
                   );
                 })}

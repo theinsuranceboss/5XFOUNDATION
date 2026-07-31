@@ -1,6 +1,7 @@
 'use client';
 
 import { useStore, CartItemWithProduct, getSessionId } from '@/lib/store';
+import { getDisplayUrl } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -204,11 +205,11 @@ export function CartSidebar() {
                 return (
                   <div key={item.id} className="flex gap-3 rounded-lg border border-gray-100 bg-gray-50/50 p-3">
                     <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
-                      <img
-                        src={frontImage}
-                        alt={item.product.title}
-                        className="h-full w-full object-cover"
-                      />
+                        <img
+                          src={getDisplayUrl(frontImage)}
+                          alt={item.product.title}
+                          className="h-full w-full object-cover"
+                        />
                     </div>
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-start justify-between">
