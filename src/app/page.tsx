@@ -107,6 +107,7 @@ function PaymentMethods() {
 function StorySlideshow({ source, name, v }: { source: string; name: string; v: number }) {
   const [resolvedImages, setResolvedImages] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [transition, setTransition] = useState('fade');
 
   useEffect(() => {
     let ignore = false;
@@ -118,9 +119,18 @@ function StorySlideshow({ source, name, v }: { source: string; name: string; v: 
         return;
       }
 
+      let cleanSrc = src;
+      const lines = src.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length > 0 && lines[0].startsWith('transition:')) {
+        setTransition(lines[0].split(':')[1] || 'fade');
+        cleanSrc = lines.slice(1).join('\n');
+      } else {
+        setTransition('fade');
+      }
+
       // Check if it's a Google Drive folder link
       const gdriveFolderRegex = /(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/;
-      const folderMatch = src.match(gdriveFolderRegex);
+      const folderMatch = cleanSrc.match(gdriveFolderRegex);
 
       if (folderMatch) {
         const folderId = folderMatch[1];
@@ -140,10 +150,10 @@ function StorySlideshow({ source, name, v }: { source: string; name: string; v: 
       }
 
       // If it's a list of links (one per line or comma-separated)
-      const links = src
+      const links = cleanSrc
         .split(/[\n,]/)
         .map(l => l.trim())
-        .filter(l => l.length > 0)
+        .filter(l => l.length > 0 && !l.startsWith('transition:'))
         .map(l => {
           const fileMatch = l.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
           if (fileMatch) {
@@ -181,17 +191,44 @@ function StorySlideshow({ source, name, v }: { source: string; name: string; v: 
     return <div className="w-full h-full bg-white/5 animate-pulse" />;
   }
 
+  const getInitial = () => {
+    switch (transition) {
+      case 'slide-left': return { x: 100, opacity: 0 };
+      case 'slide-up': return { y: 100, opacity: 0 };
+      case 'zoom': return { scale: 1.3, opacity: 0 };
+      default: return { opacity: 0 };
+    }
+  };
+
+  const getAnimate = () => {
+    switch (transition) {
+      case 'slide-left': return { x: 0, opacity: 1 };
+      case 'slide-up': return { y: 0, opacity: 1 };
+      case 'zoom': return { scale: 1, opacity: 1 };
+      default: return { opacity: 1 };
+    }
+  };
+
+  const getExit = () => {
+    switch (transition) {
+      case 'slide-left': return { x: -100, opacity: 0 };
+      case 'slide-up': return { y: -100, opacity: 0 };
+      case 'zoom': return { scale: 0.8, opacity: 0 };
+      default: return { opacity: 0 };
+    }
+  };
+
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.img
           key={currentIndex}
           src={resolvedImages[currentIndex]}
           alt={name}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.2, ease: "easeInOut" }}
+          initial={getInitial()}
+          animate={getAnimate()}
+          exit={getExit()}
+          transition={{ duration: 1.0, ease: "easeInOut" }}
           className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
         />
       </AnimatePresence>

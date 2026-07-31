@@ -31,20 +31,33 @@ import { getSiteContent, updateSiteContent, getReservations, deleteReservation }
 import { AdminPanel } from "@/components/admin-panel";
 
 
+function parseStoryImg(raw: string): { transition: string; urls: string[] } {
+  if (!raw) return { transition: 'fade', urls: [] };
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length > 0 && lines[0].startsWith('transition:')) {
+    return { transition: lines[0].split(':')[1] || 'fade', urls: lines.slice(1) };
+  }
+  return { transition: 'fade', urls: lines };
+}
+
+function buildStoryImg(transition: string, urls: string[]): string {
+  const filtered = urls.filter(u => u.trim().length > 0);
+  if (filtered.length === 0) return '';
+  return `transition:${transition}\n${filtered.join('\n')}`;
+}
+
 function StoryImagePreview({ source, name }: { source: string; name: string }) {
   const [previewUrl, setPreviewUrl] = useState<string>("/placeholder.png");
 
   useEffect(() => {
     let ignore = false;
     async function resolvePreview() {
-      const src = source || "";
-      if (!src.trim()) {
-        setPreviewUrl("/placeholder.png");
-        return;
-      }
+      const { urls } = parseStoryImg(source || "");
+      if (urls.length === 0) { setPreviewUrl("/placeholder.png"); return; }
 
+      const firstUrl = urls[0];
       const gdriveFolderRegex = /(?:folders\/|id=)(1[a-zA-Z0-9_-]{32})/;
-      const folderMatch = src.match(gdriveFolderRegex);
+      const folderMatch = firstUrl.match(gdriveFolderRegex);
 
       if (folderMatch) {
         const folderId = folderMatch[1];
@@ -61,39 +74,24 @@ function StoryImagePreview({ source, name }: { source: string; name: string }) {
         }
       }
 
-      const links = src
-        .split(/[\n,]/)
-        .map(l => l.trim())
-        .filter(l => l.length > 0)
-        .map(l => {
-          const fileMatch = l.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
-          if (fileMatch) {
-            return `/api/gdrive/image?id=${fileMatch[1]}&v=3`;
-          }
-          return l;
-        });
-
-      if (links.length > 0) {
-        if (ignore) return;
-        setPreviewUrl(links[0]);
+      const fileMatch = firstUrl.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
+      if (fileMatch) {
+        if (!ignore) setPreviewUrl(`/api/gdrive/image?id=${fileMatch[1]}&v=3`);
         return;
       }
 
-      if (ignore) return;
-      setPreviewUrl("/placeholder.png");
+      if (!ignore) setPreviewUrl(firstUrl.includes('?') || firstUrl.startsWith('/') || firstUrl.startsWith('data:') ? firstUrl : `${firstUrl}?v=${Date.now()}`);
     }
 
     resolvePreview();
-    return () => {
-      ignore = true;
-    };
+    return () => { ignore = true; };
   }, [source]);
 
   return (
-    <img 
-      src={previewUrl} 
-      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-      alt={name} 
+    <img
+      src={previewUrl}
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+      alt={name}
     />
   );
 }
@@ -969,10 +967,9 @@ export default function AdminDashboard() {
         if (stories.some(s => s.id === id)) {
           const newStories = stories.map(s => {
             if (s.id === id) {
-              const currentImg = s.img || "";
-              // Only treat as empty/legacy if it has no content or is the generic placeholder
-              const isEmptyOrPlaceholder = !currentImg.trim() || currentImg.trim() === "/placeholder.png";
-              const updatedImg = isEmptyOrPlaceholder ? returnedUrl : `${currentImg}\n${returnedUrl}`;
+              const { transition: t, urls } = parseStoryImg(s.img || "");
+              if (urls.length >= 5) return s;
+              const updatedImg = buildStoryImg(s.transition || t || 'fade', [...urls, returnedUrl]);
               return { ...s, img: updatedImg };
             }
             return s;
@@ -2488,17 +2485,20 @@ export default function AdminDashboard() {
               >
                 <div className="flex justify-between items-center mb-10">
                   <h3 className="text-2xl font-black italic">Survivor Stories (Who We Help)</h3>
-                  <button 
-                    onClick={() => setStories([...stories, { id: `story_${Date.now()}`, name: 'New Survivor', tag: 'Legacy Member', journey: '', help: '', img: '/placeholder.png' }])}
+                  <button
+                    onClick={() => setStories([...stories, { id: `story_${Date.now()}`, name: 'New Survivor', tag: 'Legacy Member', journey: '', help: '', img: '', transition: 'fade' }])}
                     className="flex items-center gap-2 bg-brand-blue text-white px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all"
                   >
                     <Plus size={14} /> Add Story
                   </button>
                 </div>
                 <div className="space-y-12">
-                  {stories.map((story, idx) => (
+                  {stories.map((story, idx) => {
+                    const { transition: storyTransition, urls: storyImageUrls } = parseStoryImg(story.img || "");
+                    const storyTransitionVal = story.transition || storyTransition || 'fade';
+                    return (
                     <div key={story.id} className="p-12 bg-white border border-gray-100 rounded-[3rem] shadow-xl space-y-10 relative group">
-                       <button 
+                       <button
                          onClick={() => setStories(stories.filter((_, i) => i !== idx))}
                          className="absolute top-8 right-8 p-2 text-gray-400 hover:text-red-500 transition-colors"
                        >
@@ -2506,9 +2506,11 @@ export default function AdminDashboard() {
                        </button>
 
                        <div className="flex flex-col lg:flex-row gap-12">
-                          <div className="w-full lg:w-64 flex flex-col gap-3 shrink-0">
-                            <div 
+                          <div className="w-full lg:w-80 flex flex-col gap-3 shrink-0">
+                            {/* Image Preview */}
+                            <div
                               onClick={() => {
+                                if (storyImageUrls.length >= 5) { alert('Maximum 5 images per story. Delete one before uploading more.'); return; }
                                 const input = document.getElementById('image-upload') as any;
                                 input.dataset.currentId = story.id;
                                 input.click();
@@ -2518,53 +2520,121 @@ export default function AdminDashboard() {
                               <StoryImagePreview source={story.img} name={story.name} />
                               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all">
                                   <Upload className="text-white mb-2" size={24} />
-                                  <span className="text-white text-[8px] font-black uppercase tracking-widest">Upload Photo</span>
+                                  <span className="text-white text-[8px] font-black uppercase tracking-widest">{storyImageUrls.length >= 5 ? 'Max 5 Images' : 'Upload Photo'}</span>
                               </div>
                             </div>
 
+                            {/* Upload Button */}
                             <button
                                type="button"
                                onClick={() => {
+                                 if (storyImageUrls.length >= 5) { alert('Maximum 5 images per story. Delete one before uploading more.'); return; }
                                  const input = document.getElementById('image-upload') as any;
                                  input.dataset.currentId = story.id;
                                  input.click();
                                }}
-                               className="w-full bg-brand-blue text-white py-2.5 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-brand-blue/90 transition-all shadow-sm"
+                               disabled={storyImageUrls.length >= 5}
+                               className="w-full bg-brand-blue text-white py-2.5 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-brand-blue/90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                              >
-                               <Upload size={12} /> Upload Image to Supabase
+                               <Upload size={12} /> {storyImageUrls.length >= 5 ? 'Max 5 Images Reached' : 'Upload Image to Convex'}
                              </button>
 
+                            {/* Image Count */}
+                            <div className="flex items-center justify-between px-1">
+                              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{storyImageUrls.length}/5 Images</span>
+                              {storyImageUrls.length > 0 && (
+                                <button
+                                  type="button"
+                                  title="Clear all images"
+                                  onClick={() => {
+                                    if (confirm('Clear all images for this story?')) {
+                                      const updatedStories = stories.map(s =>
+                                        s.id === story.id ? { ...s, img: '' } : s
+                                      );
+                                      setStories(updatedStories);
+                                      updateSiteContent('siteStories', JSON.stringify(updatedStories));
+                                      localStorage.setItem('siteStories', JSON.stringify(updatedStories));
+                                    }
+                                  }}
+                                  className="text-[8px] text-red-400 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors"
+                                >
+                                  <Trash2 size={9} /> Clear All
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Uploaded Images Grid with Delete */}
+                            {storyImageUrls.length > 0 && (
+                              <div className="grid grid-cols-3 gap-2">
+                                {storyImageUrls.map((url, imgIdx) => (
+                                  <div key={imgIdx} className="aspect-square relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 group/thumb">
+                                    <img src={url} alt={`Slide ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newUrls = storyImageUrls.filter((_, i) => i !== imgIdx);
+                                        const updatedImg = buildStoryImg(storyTransitionVal, newUrls);
+                                        const updatedStories = stories.map(s => s.id === story.id ? { ...s, img: updatedImg } : s);
+                                        setStories(updatedStories);
+                                        updateSiteContent('siteStories', JSON.stringify(updatedStories));
+                                        localStorage.setItem('siteStories', JSON.stringify(updatedStories));
+                                      }}
+                                      className="absolute top-0.5 right-0.5 bg-red-600 text-white p-0.5 rounded-full opacity-0 group-hover/thumb:opacity-100 transition-opacity z-10"
+                                    >
+                                      <X size={10} />
+                                    </button>
+                                    <span className="absolute bottom-0 left-0 bg-black/60 text-white text-[7px] font-bold px-1 py-0.5 rounded-tr">{imgIdx + 1}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Slideshow Transition Selector */}
+                            {storyImageUrls.length > 1 && (
+                              <div className="space-y-1">
+                                <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-gray-400">Slideshow Transition</label>
+                                <select
+                                  value={storyTransitionVal}
+                                  onChange={(e) => {
+                                    const newTransition = e.target.value;
+                                    const updatedImg = buildStoryImg(newTransition, storyImageUrls);
+                                    const updatedStories = stories.map(s => s.id === story.id ? { ...s, img: updatedImg, transition: newTransition } : s);
+                                    setStories(updatedStories);
+                                    updateSiteContent('siteStories', JSON.stringify(updatedStories));
+                                    localStorage.setItem('siteStories', JSON.stringify(updatedStories));
+                                  }}
+                                  className="w-full bg-gray-50 px-3 py-2 rounded-xl text-xs font-medium border border-gray-100 focus:ring-2 focus:ring-brand-blue transition-all"
+                                >
+                                  <option value="fade">Fade (Crossfade)</option>
+                                  <option value="slide-left">Slide Left</option>
+                                  <option value="slide-up">Slide Up</option>
+                                  <option value="zoom">Zoom In/Out</option>
+                                </select>
+                              </div>
+                            )}
+
+                            {/* Manual URL textarea */}
                             <div className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                 <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-gray-400">Story Images (URLs – one per line)</label>
-                                 <button
-                                   type="button"
-                                   title="Clear all image URLs"
-                                   onClick={() => {
-                                     if (confirm('Clear all image URLs for this story? You can then upload new photos.')) {
-                                       const updatedStories = stories.map(s =>
-                                         s.id === story.id ? { ...s, img: '' } : s
-                                       );
-                                       setStories(updatedStories);
-                                       updateSiteContent('siteStories', JSON.stringify(updatedStories));
-                                       localStorage.setItem('siteStories', JSON.stringify(updatedStories));
-                                     }
-                                   }}
-                                   className="text-[8px] text-red-400 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors"
-                                 >
-                                   <Trash2 size={9} /> Clear
-                                 </button>
-                               </div>
-                              <textarea 
+                              <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-gray-400">Image URLs (one per line)</label>
+                              <textarea
                                 rows={3}
                                 className="w-full bg-gray-50 px-4 py-2 rounded-xl font-medium text-xs border border-gray-100 focus:ring-2 focus:ring-brand-blue transition-all"
-                                value={story.img}
-                                placeholder="Upload photos above, or paste direct image URLs here (one per line)..."
+                                value={storyImageUrls.join('\n')}
+                                placeholder="Paste direct image URLs here (one per line)..."
                                 onChange={(e) => {
                                   const val = e.target.value;
-                                  setStories(prev => prev.map(s => 
-                                    s.id === story.id ? { ...s, img: val } : s
+                                  const newUrls = val.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                                  const updatedImg = buildStoryImg(storyTransitionVal, newUrls);
+                                  setStories(prev => prev.map(s =>
+                                    s.id === story.id ? { ...s, img: updatedImg } : s
                                   ));
+                                }}
+                                onBlur={() => {
+                                  const updatedImg = buildStoryImg(storyTransitionVal, storyImageUrls);
+                                  const updatedStories = stories.map(s => s.id === story.id ? { ...s, img: updatedImg } : s);
+                                  setStories(updatedStories);
+                                  updateSiteContent('siteStories', JSON.stringify(updatedStories));
+                                  localStorage.setItem('siteStories', JSON.stringify(updatedStories));
                                 }}
                               />
                             </div>
@@ -2574,8 +2644,8 @@ export default function AdminDashboard() {
                              <div className="grid grid-cols-2 gap-6">
                                 <div>
                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Full Name</label>
-                                   <input 
-                                     className="w-full bg-gray-50 px-6 py-4 rounded-xl font-bold text-lg border-none shadow-inner focus:ring-2 focus:ring-brand-blue" 
+                                   <input
+                                     className="w-full bg-gray-50 px-6 py-4 rounded-xl font-bold text-lg border-none shadow-inner focus:ring-2 focus:ring-brand-blue"
                                      value={story.name}
                                      onChange={(e) => {
                                        const ns = [...stories];
@@ -2586,8 +2656,8 @@ export default function AdminDashboard() {
                                 </div>
                                 <div>
                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Tagline / Role</label>
-                                   <input 
-                                     className="w-full bg-gray-50 px-6 py-4 rounded-xl font-bold text-lg border-none shadow-inner focus:ring-2 focus:ring-brand-blue" 
+                                   <input
+                                     className="w-full bg-gray-50 px-6 py-4 rounded-xl font-bold text-lg border-none shadow-inner focus:ring-2 focus:ring-brand-blue"
                                      value={story.tag}
                                      onChange={(e) => {
                                        const ns = [...stories];
@@ -2600,8 +2670,8 @@ export default function AdminDashboard() {
 
                              <div>
                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">The Journey</label>
-                                <textarea 
-                                  className="w-full bg-gray-50 px-6 py-4 rounded-xl font-medium text-sm border-none shadow-inner focus:ring-2 focus:ring-brand-blue h-24" 
+                                <textarea
+                                  className="w-full bg-gray-50 px-6 py-4 rounded-xl font-medium text-sm border-none shadow-inner focus:ring-2 focus:ring-brand-blue h-24"
                                   value={story.journey}
                                   onChange={(e) => {
                                     const ns = [...stories];
@@ -2613,8 +2683,8 @@ export default function AdminDashboard() {
 
                              <div>
                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">How 5X Foundation Helped</label>
-                                <textarea 
-                                  className="w-full bg-gray-50 px-6 py-4 rounded-xl font-bold text-sm border-none shadow-inner focus:ring-2 focus:ring-brand-blue h-24 text-brand-blue" 
+                                <textarea
+                                  className="w-full bg-gray-50 px-6 py-4 rounded-xl font-bold text-sm border-none shadow-inner focus:ring-2 focus:ring-brand-blue h-24 text-brand-blue"
                                   value={story.help}
                                   onChange={(e) => {
                                     const ns = [...stories];
@@ -2625,35 +2695,9 @@ export default function AdminDashboard() {
                              </div>
                           </div>
                        </div>
-
-                       {/* Real-time Fetch Tester & Image Manager for Survivor Story */}
-                       <div className="border-t border-gray-100 pt-6">
-                          <GDriveFolderTester 
-                            folderUrl={story.img} 
-                            onRemoveImage={(imgIdx, imgUrl) => {
-                              const lines = (story.img || "")
-                                .split(/[\n,]/)
-                                .map((l: string) => l.trim())
-                                .filter((l: string) => l.length > 0);
-                              
-                              const updatedLines = lines.filter((l: string, i: number) => {
-                                if (lines.length > imgIdx) return i !== imgIdx;
-                                return l !== imgUrl;
-                              });
-
-                              const updatedImg = updatedLines.join('\n');
-                              const updatedStories = stories.map((s, sIdx) => 
-                                sIdx === idx ? { ...s, img: updatedImg } : s
-                              );
-
-                              setStories(updatedStories);
-                              updateSiteContent('siteStories', JSON.stringify(updatedStories));
-                              localStorage.setItem('siteStories', JSON.stringify(updatedStories));
-                            }}
-                          />
-                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </motion.div>
             )}
