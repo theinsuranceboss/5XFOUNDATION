@@ -3,3 +3,10 @@ command = "npm run build"
 
 [build.environment]
 NEXT_BUILD_DIR = ".next"
+
+[[plugins]]
+package = "@netlify/next"
+
+[functions]
+node_bundler = "esbuild"
+included_files = ["src/**/*", "convex/**/*", "public/**/*"]

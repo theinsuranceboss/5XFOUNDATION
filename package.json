@@ -57,14 +57,15 @@
     "sharp": "^0.34.3",
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.5.0",
-    "tailwindcss-animate": "^1.0.7",
     "tailwindcss": "^4",
+    "tailwindcss-animate": "^1.0.7",
     "tweetsodium": "^0.0.4",
     "vaul": "^1.1.2",
     "zod": "^4.0.2",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@netlify/next": "^1.4.9",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
