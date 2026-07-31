@@ -3,6 +3,40 @@ import { convexQuery, convexMutation } from '@/lib/convexClient';
 
 export const dynamic = 'force-dynamic';
 
+async function parseBody(req: NextRequest) {
+  const url = new URL(req.url);
+  let body: any = {};
+  
+  // 1. Query params
+  body.sessionId = url.searchParams.get('sessionId');
+  body.productId = url.searchParams.get('productId');
+  body.color = url.searchParams.get('color');
+  body.size = url.searchParams.get('size');
+  body.quantity = parseInt(url.searchParams.get('quantity') || '1');
+  body.id = url.searchParams.get('id');
+  
+  // 2. Middleware header
+  if (!body.sessionId) {
+    const bodyHeader = req.headers.get('x-parsed-body');
+    if (bodyHeader) {
+      try {
+        const parsed = JSON.parse(bodyHeader);
+        Object.assign(body, parsed);
+      } catch (e) {}
+    }
+  }
+  
+  // 3. req.json() fallback
+  if (!body.sessionId && !body.id) {
+    try {
+      const parsed = await req.json();
+      Object.assign(body, parsed);
+    } catch (e) {}
+  }
+  
+  return body;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -20,7 +54,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await parseBody(req);
     const { sessionId, productId, color, size, quantity = 1 } = body;
     if (!sessionId || !productId || !color || !size) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -41,7 +75,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await parseBody(req);
     const { id, quantity } = body;
     if (!id || quantity === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
