@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { convexQuery, convexMutation } from '@/lib/convexClient';
+import { parseJsonBody } from '@/lib/parse-body';
 import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
     let gdriveUrl: string | null = null;
 
     if (contentTypeHeader.includes('application/json')) {
-      const body = await req.json();
+      const body = await parseJsonBody(req);
       gdriveUrl = body.gdriveUrl || body.url || null;
       name = body.name || null;
     } else {

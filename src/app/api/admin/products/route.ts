@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { convexMutation } from '@/lib/convexClient';
+import { parseJsonBody } from '@/lib/parse-body';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await parseJsonBody(req);
     const { title, description, price, compareAt, categoryId, images, variants } = body;
     if (!title || !description || !price || !categoryId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await parseJsonBody(req);
     const { id, title, description, price, compareAt, categoryId, images, variants } = body;
     if (!id) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { convexQuery, convexMutation } from '@/lib/convexClient';
+import { parseJsonBody } from '@/lib/parse-body';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,7 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await parseJsonBody(req);
     const { provider, apiKey, link, isActive } = body;
     if (!provider) {
       return NextResponse.json({ error: 'Provider is required' }, { status: 400 });

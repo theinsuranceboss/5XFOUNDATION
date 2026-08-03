@@ -5,7 +5,13 @@ import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
   try {
-    const bodyText = await req.text();
+    const headerBody = req.headers.get('x-parsed-body');
+    let bodyText = '';
+    if (headerBody) {
+      bodyText = headerBody;
+    } else {
+      bodyText = await req.text();
+    }
     const signature = req.headers.get('stripe-signature') as string;
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

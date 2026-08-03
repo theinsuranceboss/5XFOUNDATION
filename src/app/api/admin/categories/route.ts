@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { convexMutation } from '@/lib/convexClient';
+import { parseJsonBody } from '@/lib/parse-body';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await parseJsonBody(req);
     const { name, slug, order } = body;
     if (!name || !slug) {
       return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await parseJsonBody(req);
     const { id, name, slug, order } = body;
     if (!id) {
       return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
