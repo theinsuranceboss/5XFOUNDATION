@@ -9,6 +9,7 @@ import { Menu, X, ShoppingBag } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getSiteContent } from "@/lib/supabase";
+import { getDisplayUrl } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 
 function cn(...inputs: ClassValue[]) {
@@ -65,7 +66,7 @@ export default function Navigation() {
         <Link href="/" className="flex items-center gap-3 group">
           <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden transition-transform group-hover:scale-110 duration-300">
             <img 
-              src={logoUrl} 
+              src={getDisplayUrl(logoUrl)} 
               alt="5X Cancer Foundation Logo" 
               className="w-full h-full object-contain"
             />

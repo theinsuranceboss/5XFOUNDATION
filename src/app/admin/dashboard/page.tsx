@@ -28,6 +28,7 @@ import {
   X
 } from "lucide-react";
 import { getSiteContent, updateSiteContent, getReservations, deleteReservation } from "@/lib/supabase";
+import { getDisplayUrl } from "@/lib/utils";
 import { AdminPanel } from "@/components/admin-panel";
 
 
@@ -1539,7 +1540,7 @@ export default function AdminDashboard() {
                               }}
                               className="aspect-video relative rounded-2xl overflow-hidden mb-4 bg-black cursor-pointer shadow-md"
                             >
-                               <img src={img.current} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={img.label} />
+                               <img src={getDisplayUrl(img.current)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={img.label} />
                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all">
                                  <Upload className="text-white mb-2" size={32} />
                                  <span className="text-white text-[10px] font-black tracking-widest uppercase">Click to Replace</span>
@@ -1561,6 +1562,27 @@ export default function AdminDashboard() {
                                   ));
                                   // Update content state
                                   setContent(prev => ({ ...prev, [img.id]: val }));
+                                }}
+                                onBlur={async (e) => {
+                                  const val = e.target.value.trim();
+                                  if (val.includes('drive.google.com') || val.includes('googleusercontent.com')) {
+                                    try {
+                                      const res = await fetch('/api/upload', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ gdriveUrl: val })
+                                      });
+                                      const data = await res.json();
+                                      const newUrl = data.url || (data.images && data.images[0]) || val;
+                                      setSiteImages(prev => prev.map(item => 
+                                        item.id === img.id ? { ...item, current: newUrl } : item
+                                      ));
+                                      setContent(prev => ({ ...prev, [img.id]: newUrl }));
+                                      if (data.url || (data.images && data.images.length > 0)) {
+                                        alert(`${img.label} procesado: imagen subida a Convex Storage con link permanente.`);
+                                      }
+                                    } catch (_) {}
+                                  }
                                 }}
                               />
                             </div>

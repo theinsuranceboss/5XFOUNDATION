@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getSiteContent } from "@/lib/supabase";
+import { getDisplayUrl } from "@/lib/utils";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -86,7 +87,7 @@ export default function Footer() {
         <div className="md:col-span-1">
           <Link href="/" className="flex items-center gap-4 mb-8 group">
             <div className="relative w-12 h-12 bg-white rounded-full overflow-hidden border-2 border-white/10 group-hover:border-brand-blue transition-all">
-               <img src={content.logo || "/logo.png"} alt="5X Logo" className="w-full h-full object-cover" />
+               <img src={getDisplayUrl(content.logo) || "/logo.png"} alt="5X Logo" className="w-full h-full object-cover" />
             </div>
             <span style={{ color: content.footerLinkColor || "#FFFFFF" }} className="text-2xl font-black tracking-tighter uppercase font-mono">5XFOUNDATION</span>
           </Link>

@@ -46,10 +46,11 @@ async function optimizeImage(buffer: Buffer): Promise<Buffer> {
 async function uploadBufferToConvexStorage(optBuffer: Buffer, fileName: string): Promise<string | null> {
   try {
     const uploadUrl = await convexMutation('upload:generateUploadUrl');
-    const formData = new FormData();
-    formData.append('file', new Blob([new Uint8Array(optBuffer)], { type: 'image/webp' }));
-
-    const uploadRes = await fetch(uploadUrl, { method: 'POST', body: formData });
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'image/webp' },
+      body: new Uint8Array(optBuffer),
+    });
     const uploadResult = await uploadRes.json();
 
     if (uploadResult.storageId) {
