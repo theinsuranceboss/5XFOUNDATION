@@ -103,8 +103,28 @@ export async function POST(req: NextRequest) {
             const matches = Array.from(html.matchAll(/id="entry-([a-zA-Z0-9_-]{19,80})"/g)).map(m => m[1]);
             const uniqueIds = Array.from(new Set(matches));
             if (uniqueIds.length > 0) {
-              const images = uniqueIds.map(id => `/api/gdrive/image?id=${id}&v=3`);
-              return NextResponse.json({ success: true, images });
+              const convexImages: string[] = [];
+              for (const id of uniqueIds) {
+                const directGUrl = `https://lh3.googleusercontent.com/d/${id}=w1600`;
+                try {
+                  const gRes = await fetch(directGUrl, {
+                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+                  });
+                  if (gRes.ok) {
+                    const rawBuf = Buffer.from(await gRes.arrayBuffer());
+                    const optBuf = await optimizeImage(rawBuf);
+                    const convexUrl = await uploadBufferToConvexStorage(optBuf, `gdrive-${id}-${Date.now()}.webp`);
+                    if (convexUrl) {
+                      convexImages.push(convexUrl);
+                      continue;
+                    }
+                  }
+                } catch (e) {
+                  console.warn(`[upload] Could not upload folder image ${id} to Convex:`, e);
+                }
+                convexImages.push(`/api/gdrive/image?id=${id}&v=3`);
+              }
+              return NextResponse.json({ success: true, images: convexImages });
             }
           }
         } catch (e) {}
