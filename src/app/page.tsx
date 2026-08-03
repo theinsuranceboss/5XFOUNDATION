@@ -571,7 +571,10 @@ export default function Home() {
       const savedContent = localStorage.getItem('siteContent');
       if (savedContent) setContent(prev => ({ ...prev, ...JSON.parse(savedContent) }));
       const savedStories = localStorage.getItem('siteStories');
-      if (savedStories) setStories(JSON.parse(savedStories));
+      if (savedStories) {
+        const parsed = JSON.parse(savedStories);
+        setStories(Array.isArray(parsed) ? parsed : [parsed]);
+      }
 
       // 2. Fetch fresh data from Supabase
       try {
@@ -583,7 +586,8 @@ export default function Home() {
 
         const dbStories = await getSiteContent('siteStories');
         if (dbStories) {
-          setStories(JSON.parse(dbStories));
+          const parsedStories = JSON.parse(dbStories);
+          setStories(Array.isArray(parsedStories) ? parsedStories : [parsedStories]);
           localStorage.setItem('siteStories', dbStories);
         }
       } catch (err) {

@@ -879,7 +879,10 @@ export default function AdminDashboard() {
         }));
       }
       const savedStories = localStorage.getItem('siteStories');
-      if (savedStories) setStories(JSON.parse(savedStories));
+      if (savedStories) {
+        const parsed = JSON.parse(savedStories);
+        setStories(Array.isArray(parsed) ? parsed : [parsed]);
+      }
       const savedCats = localStorage.getItem('siteCategories');
       if (savedCats) setCategories(JSON.parse(savedCats));
       const savedMerch = localStorage.getItem('siteMerch');
@@ -905,7 +908,8 @@ export default function AdminDashboard() {
 
         const dbStories = await getSiteContent('siteStories');
         if (dbStories) {
-          setStories(JSON.parse(dbStories));
+          const parsedStories = JSON.parse(dbStories);
+          setStories(Array.isArray(parsedStories) ? parsedStories : [parsedStories]);
           localStorage.setItem('siteStories', dbStories);
         }
 

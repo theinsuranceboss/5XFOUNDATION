@@ -158,13 +158,17 @@ export default function ImpactPage() {
     async function loadData() {
       // 1. Immediate cache load for responsive loading of user edits
       const savedStories = localStorage.getItem('siteStories');
-      if (savedStories) setStories(JSON.parse(savedStories));
+      if (savedStories) {
+        const parsed = JSON.parse(savedStories);
+        setStories(Array.isArray(parsed) ? parsed : [parsed]);
+      }
 
       // 2. Fetch fresh data from Supabase
       try {
         const dbStories = await getSiteContent('siteStories');
         if (dbStories) {
-          setStories(JSON.parse(dbStories));
+          const parsed = JSON.parse(dbStories);
+          setStories(Array.isArray(parsed) ? parsed : [parsed]);
           localStorage.setItem('siteStories', dbStories);
         }
       } catch (err) {
