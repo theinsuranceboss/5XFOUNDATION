@@ -638,8 +638,13 @@ export default function Home() {
           }
           
           if (data.success && data.images && data.images.length > 0) {
-            console.log("[resolveHeroImages] Successfully resolved folder images:", data.images);
-            setHeroImages(data.images);
+            const resolved = data.images.map((imgUrl: string) => {
+              const idMatch = imgUrl.match(/id=([a-zA-Z0-9_-]{20,})/);
+              if (idMatch) return `https://lh3.googleusercontent.com/d/${idMatch[1]}=w1200`;
+              return imgUrl;
+            });
+            console.log("[resolveHeroImages] Successfully resolved folder images:", resolved);
+            setHeroImages(resolved);
             return;
           } else {
             console.warn("[resolveHeroImages] Google Drive scraper warning/error:", data.error);
@@ -657,11 +662,10 @@ export default function Home() {
           .map(l => l.trim())
           .filter(l => l.length > 0)
           .map(l => {
-            // Convert direct Google Drive file view links to direct image render links
-            const fileMatch = l.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{32})/);
-            if (fileMatch) {
-              return `/api/gdrive/image?id=${fileMatch[1]}&v=3`;
-            }
+            const proxyIdMatch = l.match(/\/api\/gdrive\/image\?id=([a-zA-Z0-9_-]{20,})/);
+            if (proxyIdMatch) return `https://lh3.googleusercontent.com/d/${proxyIdMatch[1]}=w1200`;
+            const fileMatch = l.match(/(?:file\/d\/|id=)(1[a-zA-Z0-9_-]{20,})/);
+            if (fileMatch) return `https://lh3.googleusercontent.com/d/${fileMatch[1]}=w1200`;
             return l;
           });
         
