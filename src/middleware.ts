@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Parse body for POST/PUT/PATCH requests to API routes
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
     const contentType = request.headers.get('content-type');
