@@ -1011,9 +1011,12 @@ export default function AdminDashboard() {
           'adTopDesktop', 'adTopTablet', 'adTopMobile',
           'adMiddleDesktop', 'adMiddleTablet', 'adMiddleMobile',
           'adBottomDesktop', 'adBottomTablet', 'adBottomMobile',
-          'adTopTextSize', 'adTopTextColor',
-          'adMiddleTextSize', 'adMiddleTextColor',
-          'adBottomTextSize', 'adBottomTextColor'
+          'shopAdTopDesktop', 'shopAdTopTablet', 'shopAdTopMobile',
+          'shopAdBottomDesktop', 'shopAdBottomTablet', 'shopAdBottomMobile',
+          'eventAdTopDesktop', 'eventAdTopTablet', 'eventAdTopMobile',
+          'eventAdBottomDesktop', 'eventAdBottomTablet', 'eventAdBottomMobile',
+          'donateAdTopDesktop', 'donateAdTopTablet', 'donateAdTopMobile',
+          'donateAdBottomDesktop', 'donateAdBottomTablet', 'donateAdBottomMobile',
         ];
 
         if (contentKeys.includes(id)) {
@@ -5794,6 +5797,39 @@ export default function AdminDashboard() {
                                   <span>Supports images (.jpg, .png, .webp), animated files (.gif), and looping videos (.mp4). Leave views empty to collapse slot. If Tablet or Mobile is blank, it defaults to the Desktop asset.</span>
                                 </div>
                               </div>
+
+                              {/* Banner Preview */}
+                              {((content as any)[slot.desktopKey] || (content as any)[slot.tabletKey] || (content as any)[slot.mobileKey]) && (
+                                <div className="md:col-span-3 space-y-4 pt-4 border-t border-gray-100">
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Live Preview</label>
+                                  <div className="space-y-3">
+                                    {(content as any)[slot.desktopKey] && (
+                                      <div className="space-y-1">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-300">Desktop (1200x250)</span>
+                                        <div className="w-full aspect-[1200/250] bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                          <img src={(content as any)[slot.desktopKey]} alt="Desktop preview" className="w-full h-full object-cover" />
+                                        </div>
+                                      </div>
+                                    )}
+                                    {(content as any)[slot.tabletKey] && (
+                                      <div className="space-y-1">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-300">Tablet (768x200)</span>
+                                        <div className="w-full max-w-[500px] aspect-[768/200] bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                          <img src={(content as any)[slot.tabletKey]} alt="Tablet preview" className="w-full h-full object-cover" />
+                                        </div>
+                                      </div>
+                                    )}
+                                    {(content as any)[slot.mobileKey] && (
+                                      <div className="space-y-1">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-300">Mobile (320x150)</span>
+                                        <div className="w-full max-w-[300px] aspect-[320/150] bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                          <img src={(content as any)[slot.mobileKey]} alt="Mobile preview" className="w-full h-full object-cover" />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <div className="space-y-4">
@@ -6028,6 +6064,39 @@ export default function AdminDashboard() {
                                   <span>Supports images (.jpg, .png, .webp), animated files (.gif), and looping videos (.mp4). Leave views empty to collapse slot. If Tablet or Mobile is blank, it defaults to the Desktop asset.</span>
                                 </div>
                               </div>
+
+                              {/* Banner Preview */}
+                              {((content as any)[slot.desktopKey] || (content as any)[slot.tabletKey] || (content as any)[slot.mobileKey]) && (
+                                <div className="md:col-span-3 space-y-4 pt-4 border-t border-gray-100">
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Live Preview</label>
+                                  <div className="space-y-3">
+                                    {(content as any)[slot.desktopKey] && (
+                                      <div className="space-y-1">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-300">Desktop (1200x250)</span>
+                                        <div className="w-full aspect-[1200/250] bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                          <img src={(content as any)[slot.desktopKey]} alt="Desktop preview" className="w-full h-full object-cover" />
+                                        </div>
+                                      </div>
+                                    )}
+                                    {(content as any)[slot.tabletKey] && (
+                                      <div className="space-y-1">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-300">Tablet (768x200)</span>
+                                        <div className="w-full max-w-[500px] aspect-[768/200] bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                          <img src={(content as any)[slot.tabletKey]} alt="Tablet preview" className="w-full h-full object-cover" />
+                                        </div>
+                                      </div>
+                                    )}
+                                    {(content as any)[slot.mobileKey] && (
+                                      <div className="space-y-1">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-300">Mobile (320x150)</span>
+                                        <div className="w-full max-w-[300px] aspect-[320/150] bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                          <img src={(content as any)[slot.mobileKey]} alt="Mobile preview" className="w-full h-full object-cover" />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <div className="space-y-4">
