@@ -342,6 +342,42 @@ export default function AdminDashboard() {
     adBottomPosition: "center",
     adBottomTextSize: "14",
     adBottomTextColor: "#FFFFFF",
+    shopAdTopType: "media",
+    shopAdTopDesktop: "",
+    shopAdTopTablet: "",
+    shopAdTopMobile: "",
+    shopAdTopLink: "",
+    shopAdTopHtml: "",
+    shopAdBottomType: "media",
+    shopAdBottomDesktop: "",
+    shopAdBottomTablet: "",
+    shopAdBottomMobile: "",
+    shopAdBottomLink: "",
+    shopAdBottomHtml: "",
+    eventAdTopType: "media",
+    eventAdTopDesktop: "",
+    eventAdTopTablet: "",
+    eventAdTopMobile: "",
+    eventAdTopLink: "",
+    eventAdTopHtml: "",
+    eventAdBottomType: "media",
+    eventAdBottomDesktop: "",
+    eventAdBottomTablet: "",
+    eventAdBottomMobile: "",
+    eventAdBottomLink: "",
+    eventAdBottomHtml: "",
+    donateAdTopType: "media",
+    donateAdTopDesktop: "",
+    donateAdTopTablet: "",
+    donateAdTopMobile: "",
+    donateAdTopLink: "",
+    donateAdTopHtml: "",
+    donateAdBottomType: "media",
+    donateAdBottomDesktop: "",
+    donateAdBottomTablet: "",
+    donateAdBottomMobile: "",
+    donateAdBottomLink: "",
+    donateAdBottomHtml: "",
     donateTitle: "FUEL THE FIGHT",
     donateTitleSize: "48",
     donateTitleColor: "#FFFFFF",
@@ -1993,14 +2029,14 @@ export default function AdminDashboard() {
                   
                   <div className="flex flex-col sm:flex-row justify-between items-center bg-white border border-gray-150 rounded-2xl p-4 gap-4">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                      Asegúrate de pulsar "Guardar Cambios" en la barra superior para publicar las actualizaciones del banner.
+                      Make sure to press "Save Changes" in the top bar to publish banner updates.
                     </p>
                     <button
                       onClick={handleSaveAll}
                       disabled={isSaving}
                       className="bg-brand-blue text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-brand-blue/20 shrink-0"
                     >
-                      {isSaving ? "Guardando..." : "Guardar Banner"}
+                      {isSaving ? "Saving..." : "Save Banner"}
                     </button>
                   </div>
                 </div>
@@ -3235,23 +3271,23 @@ export default function AdminDashboard() {
                                       value={content.philosophyBgSize || 'fill'}
                                       onChange={(e) => setContent(prev => ({ ...prev, philosophyBgSize: e.target.value }))}
                                     >
-                                      <option value="fill">Fill (Rellenar)</option>
-                                      <option value="centered">Centered (Centrar)</option>
-                                      <option value="stretch">Stretch (Estirar)</option>
+                                      <option value="fill">Fill</option>
+                                      <option value="centered">Centered</option>
+                                      <option value="stretch">Stretch</option>
                                     </select>
                                   </div>
                                   <div>
-                                    <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Alineación / Posición</label>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-1">Alignment / Position</label>
                                     <select 
                                       className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-black text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-brand-blue"
                                       value={content.philosophyBgPosition || 'center'}
                                       onChange={(e) => setContent(prev => ({ ...prev, philosophyBgPosition: e.target.value }))}
                                     >
-                                      <option value="center">Centro</option>
-                                      <option value="top">Arriba</option>
-                                      <option value="bottom">Abajo</option>
-                                      <option value="left">Izquierda</option>
-                                      <option value="right">Derecha</option>
+                                      <option value="center">Center</option>
+                                      <option value="top">Top</option>
+                                      <option value="bottom">Bottom</option>
+                                      <option value="left">Left</option>
+                                      <option value="right">Right</option>
                                     </select>
                                   </div>
                                 </div>
@@ -4556,23 +4592,23 @@ export default function AdminDashboard() {
                               value={content.donateBannerSize || 'fill'}
                               onChange={(e) => setContent(prev => ({ ...prev, donateBannerSize: e.target.value }))}
                             >
-                              <option value="fill">Fill (Rellenar)</option>
-                              <option value="centered">Centered (Centrar)</option>
-                              <option value="stretch">Stretch (Estirar)</option>
+                              <option value="fill">Fill</option>
+                              <option value="centered">Centered</option>
+                              <option value="stretch">Stretch</option>
                             </select>
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue">Alineación / Posición</label>
+                            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue">Alignment / Position</label>
                             <select 
                               className="w-full bg-gray-50 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-gray-200 focus:ring-2 focus:ring-brand-blue text-black"
                               value={content.donateBannerPosition || 'center'}
                               onChange={(e) => setContent(prev => ({ ...prev, donateBannerPosition: e.target.value }))}
                             >
-                              <option value="center">Centro</option>
-                              <option value="top">Arriba</option>
-                              <option value="bottom">Abajo</option>
-                              <option value="left">Izquierda</option>
-                              <option value="right">Derecha</option>
+                              <option value="center">Center</option>
+                              <option value="top">Top</option>
+                              <option value="bottom">Bottom</option>
+                              <option value="left">Left</option>
+                              <option value="right">Right</option>
                             </select>
                           </div>
                         </div>
@@ -5329,23 +5365,23 @@ export default function AdminDashboard() {
                             value={content.everyDollarBgSize || 'fill'}
                             onChange={(e) => setContent(prev => ({ ...prev, everyDollarBgSize: e.target.value }))}
                           >
-                            <option value="fill">Fill (Rellenar)</option>
-                            <option value="centered">Centered (Centrar)</option>
-                            <option value="stretch">Stretch (Estirar)</option>
+                            <option value="fill">Fill</option>
+                            <option value="centered">Centered</option>
+                            <option value="stretch">Stretch</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue mb-1">Alineación / Posición</label>
+                          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue mb-1">Alignment / Position</label>
                           <select 
                             className="w-full bg-gray-50 px-4 py-3 rounded-2xl text-xs border border-gray-200 text-black font-black uppercase tracking-wider"
                             value={content.everyDollarBgPosition || 'center'}
                             onChange={(e) => setContent(prev => ({ ...prev, everyDollarBgPosition: e.target.value }))}
                           >
-                            <option value="center">Centro</option>
-                            <option value="top">Arriba</option>
-                            <option value="bottom">Abajo</option>
-                            <option value="left">Izquierda</option>
-                            <option value="right">Derecha</option>
+                            <option value="center">Center</option>
+                            <option value="top">Top</option>
+                            <option value="bottom">Bottom</option>
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
                           </select>
                         </div>
                       </div>
@@ -5702,23 +5738,23 @@ export default function AdminDashboard() {
                                     value={(content as any)[slot.sizeKey] || 'fill'}
                                     onChange={(e) => setContent(prev => ({ ...prev, [slot.sizeKey]: e.target.value }))}
                                   >
-                                    <option value="fill">Fill (Rellenar)</option>
-                                    <option value="centered">Centered (Centrar)</option>
-                                    <option value="stretch">Stretch (Estirar)</option>
+                                    <option value="fill">Fill</option>
+                                    <option value="centered">Centered</option>
+                                    <option value="stretch">Stretch</option>
                                   </select>
                                 </div>
                                 <div className="space-y-2">
-                                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Alineación / Posición</label>
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Alignment / Position</label>
                                   <select 
                                     className="w-full bg-white border-2 border-gray-100 focus:border-brand-blue px-5 py-4 rounded-xl font-bold text-xs focus:ring-0 text-black shadow-sm uppercase tracking-wider"
                                     value={(content as any)[slot.positionKey] || 'center'}
                                     onChange={(e) => setContent(prev => ({ ...prev, [slot.positionKey]: e.target.value }))}
                                   >
-                                    <option value="center">Centro</option>
-                                    <option value="top">Arriba</option>
-                                    <option value="bottom">Abajo</option>
-                                    <option value="left">Izquierda</option>
-                                    <option value="right">Derecha</option>
+                                    <option value="center">Center</option>
+                                    <option value="top">Top</option>
+                                    <option value="bottom">Bottom</option>
+                                    <option value="left">Left</option>
+                                    <option value="right">Right</option>
                                   </select>
                                 </div>
                                 <div className="space-y-2">
@@ -5771,6 +5807,240 @@ export default function AdminDashboard() {
                               />
                               <div className="text-[10px] text-amber-600 bg-amber-50 border border-amber-100 p-4 rounded-xl font-medium leading-relaxed">
                                 ⚠️ <strong>Important Note:</strong> Ensure your custom HTML does not include malformed tags, as it could disrupt page layout parsing. Make sure the container limits its sizing properly.
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Subpage Banner Slots */}
+                <div className="space-y-8">
+                  <div className="border-t border-gray-200 pt-10">
+                    <span className="bg-brand-blue/10 text-brand-blue px-4 py-1.5 rounded-full font-black text-[9px] uppercase tracking-[0.2em] inline-block mb-4">Subpage Banners</span>
+                    <h3 className="text-3xl font-black tracking-tight">Shop, Events & Donate Page Banners</h3>
+                    <p className="text-sm text-gray-500 font-medium mt-2">Configure promotional banners that appear on specific subpages. These are independent from the homepage ad slots.</p>
+                  </div>
+
+                  {[
+                    {
+                      id: "ShopTop",
+                      title: "Shop - Top Banner",
+                      desc: "Rendered below the Shop header banner and above the product grid.",
+                      typeKey: "shopAdTopType",
+                      desktopKey: "shopAdTopDesktop",
+                      tabletKey: "shopAdTopTablet",
+                      mobileKey: "shopAdTopMobile",
+                      linkKey: "shopAdTopLink",
+                      htmlKey: "shopAdTopHtml",
+                      suggestedDems: { d: "1200x250", t: "768x200", m: "320x150" }
+                    },
+                    {
+                      id: "ShopBottom",
+                      title: "Shop - Bottom Banner",
+                      desc: "Rendered below the product grid, above the footer.",
+                      typeKey: "shopAdBottomType",
+                      desktopKey: "shopAdBottomDesktop",
+                      tabletKey: "shopAdBottomTablet",
+                      mobileKey: "shopAdBottomMobile",
+                      linkKey: "shopAdBottomLink",
+                      htmlKey: "shopAdBottomHtml",
+                      suggestedDems: { d: "1200x250", t: "768x200", m: "320x150" }
+                    },
+                    {
+                      id: "EventsTop",
+                      title: "Events - Top Banner",
+                      desc: "Rendered below the Events header banner and above the event listings.",
+                      typeKey: "eventAdTopType",
+                      desktopKey: "eventAdTopDesktop",
+                      tabletKey: "eventAdTopTablet",
+                      mobileKey: "eventAdTopMobile",
+                      linkKey: "eventAdTopLink",
+                      htmlKey: "eventAdTopHtml",
+                      suggestedDems: { d: "1200x250", t: "768x200", m: "320x150" }
+                    },
+                    {
+                      id: "EventsBottom",
+                      title: "Events - Bottom Banner",
+                      desc: "Rendered below the event listings, above the footer.",
+                      typeKey: "eventAdBottomType",
+                      desktopKey: "eventAdBottomDesktop",
+                      tabletKey: "eventAdBottomTablet",
+                      mobileKey: "eventAdBottomMobile",
+                      linkKey: "eventAdBottomLink",
+                      htmlKey: "eventAdBottomHtml",
+                      suggestedDems: { d: "1200x250", t: "768x200", m: "320x150" }
+                    },
+                    {
+                      id: "DonateTop",
+                      title: "Donate - Top Banner",
+                      desc: "Rendered below the Donate header banner and above the donation section.",
+                      typeKey: "donateAdTopType",
+                      desktopKey: "donateAdTopDesktop",
+                      tabletKey: "donateAdTopTablet",
+                      mobileKey: "donateAdTopMobile",
+                      linkKey: "donateAdTopLink",
+                      htmlKey: "donateAdTopHtml",
+                      suggestedDems: { d: "1200x250", t: "768x200", m: "320x150" }
+                    },
+                    {
+                      id: "DonateBottom",
+                      title: "Donate - Bottom Banner",
+                      desc: "Rendered below the donation section, above the footer.",
+                      typeKey: "donateAdBottomType",
+                      desktopKey: "donateAdBottomDesktop",
+                      tabletKey: "donateAdBottomTablet",
+                      mobileKey: "donateAdBottomMobile",
+                      linkKey: "donateAdBottomLink",
+                      htmlKey: "donateAdBottomHtml",
+                      suggestedDems: { d: "1200x250", t: "768x200", m: "320x150" }
+                    }
+                  ].map((slot) => {
+                    const isMediaMode = (content as any)[slot.typeKey] === "media" || !(content as any)[slot.typeKey];
+
+                    return (
+                      <div key={slot.id} className="bg-white rounded-[2rem] p-8 md:p-10 border border-gray-100 shadow-sm space-y-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-5 border-b border-gray-100">
+                          <div className="space-y-1">
+                            <h4 className="text-lg font-black tracking-tight">{slot.title}</h4>
+                            <p className="text-xs text-gray-400 font-medium">{slot.desc}</p>
+                          </div>
+                          <div className="flex bg-gray-100 rounded-xl p-1 self-stretch md:self-auto">
+                            {[
+                              { label: "Creative Asset", val: "media" },
+                              { label: "HTML / Script", val: "html" }
+                            ].map((mode) => (
+                              <button
+                                type="button"
+                                key={mode.val}
+                                onClick={() => setContent(prev => ({ ...prev, [slot.typeKey]: mode.val }))}
+                                className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-wider transition-all ${
+                                  ((content as any)[slot.typeKey] || "media") === mode.val
+                                    ? "bg-black text-white shadow-md"
+                                    : "text-gray-400 hover:text-black"
+                                }`}
+                              >
+                                {mode.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-5">
+                          {isMediaMode ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Desktop View URL</label>
+                                  <span className="text-[9px] font-black text-brand-blue uppercase bg-brand-blue/10 px-2 py-0.5 rounded">{slot.suggestedDems.d}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="https://.../banner_desktop.png"
+                                    className="flex-1 bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black shadow-sm"
+                                    value={(content as any)[slot.desktopKey] || ""}
+                                    onChange={(e) => setContent(prev => ({ ...prev, [slot.desktopKey]: e.target.value }))}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const input = document.getElementById('image-upload') as any;
+                                      input.dataset.currentId = slot.desktopKey;
+                                      input.click();
+                                    }}
+                                    className="bg-brand-blue hover:bg-black text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 shadow-sm"
+                                  >
+                                    <Upload size={12} /> Upload
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Tablet View URL</label>
+                                  <span className="text-[9px] font-black text-brand-blue uppercase bg-brand-blue/10 px-2 py-0.5 rounded">{slot.suggestedDems.t}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="https://.../banner_tablet.png"
+                                    className="flex-1 bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black shadow-sm"
+                                    value={(content as any)[slot.tabletKey] || ""}
+                                    onChange={(e) => setContent(prev => ({ ...prev, [slot.tabletKey]: e.target.value }))}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const input = document.getElementById('image-upload') as any;
+                                      input.dataset.currentId = slot.tabletKey;
+                                      input.click();
+                                    }}
+                                    className="bg-brand-blue hover:bg-black text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 shadow-sm"
+                                  >
+                                    <Upload size={12} /> Upload
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Mobile View URL</label>
+                                  <span className="text-[9px] font-black text-brand-blue uppercase bg-brand-blue/10 px-2 py-0.5 rounded">{slot.suggestedDems.m}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="https://.../banner_mobile.png"
+                                    className="flex-1 bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black shadow-sm"
+                                    value={(content as any)[slot.mobileKey] || ""}
+                                    onChange={(e) => setContent(prev => ({ ...prev, [slot.mobileKey]: e.target.value }))}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const input = document.getElementById('image-upload') as any;
+                                      input.dataset.currentId = slot.mobileKey;
+                                      input.click();
+                                    }}
+                                    className="bg-brand-blue hover:bg-black text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5 shadow-sm"
+                                  >
+                                    <Upload size={12} /> Upload
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="md:col-span-3 space-y-2 pt-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Click Hyperlink Redirect URL</label>
+                                <input
+                                  type="text"
+                                  placeholder="https://shop.5xfoundation.org/special-offer"
+                                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl font-bold text-xs text-black shadow-sm"
+                                  value={(content as any)[slot.linkKey] || ""}
+                                  onChange={(e) => setContent(prev => ({ ...prev, [slot.linkKey]: e.target.value }))}
+                                />
+                              </div>
+
+                              <div className="md:col-span-3">
+                                <div className="text-[10px] text-gray-400 font-medium flex items-center gap-1.5 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                  <span>Supports images (.jpg, .png, .webp), animated files (.gif), and looping videos (.mp4). Leave views empty to collapse slot. If Tablet or Mobile is blank, it defaults to the Desktop asset.</span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Custom HTML / Script Block</label>
+                              <textarea
+                                rows={6}
+                                placeholder="<!-- Paste your iframe, custom script, or Adsense code here -->&#10;<div style='text-align: center;'><a href='...'><img src='...' /></a></div>"
+                                className="w-full bg-brand-black border border-white/10 px-5 py-5 rounded-2xl font-mono text-xs focus:border-brand-blue text-white focus:ring-0 shadow-lg"
+                                value={(content as any)[slot.htmlKey] || ""}
+                                onChange={(e) => setContent(prev => ({ ...prev, [slot.htmlKey]: e.target.value }))}
+                              />
+                              <div className="text-[10px] text-amber-600 bg-amber-50 border border-amber-100 p-4 rounded-xl font-medium leading-relaxed">
+                                Ensure your custom HTML does not include malformed tags, as it could disrupt page layout parsing.
                               </div>
                             </div>
                           )}
