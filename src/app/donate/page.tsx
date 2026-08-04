@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getSiteContent } from "@/lib/supabase";
 import { DonationCard } from "@/components/DonationCard";
+import AdBanner from "@/components/AdBanner";
 
 export const dynamic = 'force-dynamic';
 
@@ -89,6 +90,18 @@ export default function DonatePage() {
     donateBannerOverlay: "0.4",
     donateBannerSize: "fill",
     donateBannerPosition: "center",
+    donateAdTopType: "media",
+    donateAdTopDesktop: "",
+    donateAdTopTablet: "",
+    donateAdTopMobile: "",
+    donateAdTopLink: "",
+    donateAdTopHtml: "",
+    donateAdBottomType: "media",
+    donateAdBottomDesktop: "",
+    donateAdBottomTablet: "",
+    donateAdBottomMobile: "",
+    donateAdBottomLink: "",
+    donateAdBottomHtml: "",
     donateHtml: `
 <div class="text-center p-16 bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-300 max-w-2xl mx-auto my-12 shadow-sm">
   <p class="text-gray-500 font-bold text-sm tracking-wider uppercase mb-2">Donation HTML Block</p>
@@ -316,6 +329,16 @@ export default function DonatePage() {
         {/* Header Banner */}
         {finalBanner}
 
+        {/* Donate Top Ad Banner */}
+        <AdBanner
+          type={content.donateAdTopType || 'media'}
+          desktop={content.donateAdTopDesktop || ''}
+          tablet={content.donateAdTopTablet || ''}
+          mobile={content.donateAdTopMobile || ''}
+          link={content.donateAdTopLink || ''}
+          html={content.donateAdTopHtml || ''}
+        />
+
         {/* Make a Difference Today Section */}
         <div className="my-16 max-w-4xl mx-auto text-center px-4">
           <h2 
@@ -450,6 +473,16 @@ export default function DonatePage() {
             </div>
           </div>
         </div>
+
+        {/* Donate Bottom Ad Banner */}
+        <AdBanner
+          type={content.donateAdBottomType || 'media'}
+          desktop={content.donateAdBottomDesktop || ''}
+          tablet={content.donateAdBottomTablet || ''}
+          mobile={content.donateAdBottomMobile || ''}
+          link={content.donateAdBottomLink || ''}
+          html={content.donateAdBottomHtml || ''}
+        />
 
       </div>
     </div>

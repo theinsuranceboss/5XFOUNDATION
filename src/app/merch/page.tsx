@@ -5,6 +5,7 @@ import { useStore, getSessionId } from '@/lib/store';
 import { ProductGrid } from '@/components/product-grid';
 import { getSiteContent } from '@/lib/supabase';
 import { ShoppingBag } from 'lucide-react';
+import AdBanner from '@/components/AdBanner';
 
 export default function MerchPage() {
   const { setProducts, setCategories, setCart, setPaymentConfigs, cart, setIsCartOpen } = useStore();
@@ -19,6 +20,18 @@ export default function MerchPage() {
     shopBannerPosition: 'center',
     shopTitleColor: '#FFFFFF',
     shopSubtitleColor: '#E5E7EB',
+    shopAdTopType: 'media',
+    shopAdTopDesktop: '',
+    shopAdTopTablet: '',
+    shopAdTopMobile: '',
+    shopAdTopLink: '',
+    shopAdTopHtml: '',
+    shopAdBottomType: 'media',
+    shopAdBottomDesktop: '',
+    shopAdBottomTablet: '',
+    shopAdBottomMobile: '',
+    shopAdBottomLink: '',
+    shopAdBottomHtml: '',
   });
 
   useEffect(() => {
@@ -206,8 +219,28 @@ export default function MerchPage() {
         {/* Store Header Banner */}
         {finalBanner}
 
+        {/* Shop Top Ad Banner */}
+        <AdBanner
+          type={content.shopAdTopType || 'media'}
+          desktop={content.shopAdTopDesktop || ''}
+          tablet={content.shopAdTopTablet || ''}
+          mobile={content.shopAdTopMobile || ''}
+          link={content.shopAdTopLink || ''}
+          html={content.shopAdTopHtml || ''}
+        />
+
         {/* Dynamic Product Grid & Filters */}
         <ProductGrid />
+
+        {/* Shop Bottom Ad Banner */}
+        <AdBanner
+          type={content.shopAdBottomType || 'media'}
+          desktop={content.shopAdBottomDesktop || ''}
+          tablet={content.shopAdBottomTablet || ''}
+          mobile={content.shopAdBottomMobile || ''}
+          link={content.shopAdBottomLink || ''}
+          html={content.shopAdBottomHtml || ''}
+        />
       </div>
 
       {/* Floating Cart Icon for Mobile/Desktop */}

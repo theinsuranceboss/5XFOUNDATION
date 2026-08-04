@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, MapPin, Clock, ArrowRight, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getSiteContent, updateSiteContent, addReservation } from "@/lib/supabase";
+import AdBanner from "@/components/AdBanner";
 
 export default function EventsPage() {
   const [v, setV] = useState(0);
@@ -22,7 +23,19 @@ export default function EventsPage() {
     eventBannerSubtitleColor: '#E5E7EB',
     eventBannerSubtitleSize: '16',
     eventRsvpBtnBg: '#000000',
-    eventRsvpBtnTextColor: '#FFFFFF'
+    eventRsvpBtnTextColor: '#FFFFFF',
+    eventAdTopType: 'media',
+    eventAdTopDesktop: '',
+    eventAdTopTablet: '',
+    eventAdTopMobile: '',
+    eventAdTopLink: '',
+    eventAdTopHtml: '',
+    eventAdBottomType: 'media',
+    eventAdBottomDesktop: '',
+    eventAdBottomTablet: '',
+    eventAdBottomMobile: '',
+    eventAdBottomLink: '',
+    eventAdBottomHtml: '',
   });
   
   const [events, setEvents] = useState([
@@ -264,6 +277,16 @@ export default function EventsPage() {
         {/* Events Header Banner */}
         {finalBanner}
 
+        {/* Events Top Ad Banner */}
+        <AdBanner
+          type={content.eventAdTopType || 'media'}
+          desktop={content.eventAdTopDesktop || ''}
+          tablet={content.eventAdTopTablet || ''}
+          mobile={content.eventAdTopMobile || ''}
+          link={content.eventAdTopLink || ''}
+          html={content.eventAdTopHtml || ''}
+        />
+
         <div className="space-y-12">
           {events.map((event, index) => (
             <motion.div
@@ -315,6 +338,16 @@ export default function EventsPage() {
             </motion.div>
           ))}
         </div>
+
+        {/* Events Bottom Ad Banner */}
+        <AdBanner
+          type={content.eventAdBottomType || 'media'}
+          desktop={content.eventAdBottomDesktop || ''}
+          tablet={content.eventAdBottomTablet || ''}
+          mobile={content.eventAdBottomMobile || ''}
+          link={content.eventAdBottomLink || ''}
+          html={content.eventAdBottomHtml || ''}
+        />
       </div>
 
       {/* RSVP Modal Form */}

@@ -1,64 +1,95 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { ExternalLink } from "lucide-react";
-import { getActiveAds, recordAdClick } from "@/lib/supabase";
+import { motion } from 'framer-motion';
 
 interface AdBannerProps {
-  location: 'footer' | 'sidebar';
+  type: string;
+  desktop: string;
+  tablet: string;
+  mobile: string;
+  link: string;
+  html: string;
+  fit?: string;
+  position?: string;
+  textSize?: string;
+  textColor?: string;
 }
 
-export default function AdBanner({ location }: AdBannerProps) {
-  const [ad, setAd] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+export default function AdBanner({ type, desktop, tablet, mobile, link, html, fit, position }: AdBannerProps) {
+  const hasMedia = desktop?.trim() || tablet?.trim() || mobile?.trim();
+  const hasHtml = html?.trim();
 
-  useEffect(() => {
-    async function fetchAd() {
-      const { data, error } = await getActiveAds(location);
-      if (!error && data && data.length > 0) {
-        // Simple logic: pick a random active ad for the location
-        const randomAd = data[Math.floor(Math.random() * data.length)];
-        setAd(randomAd);
-      }
-      setLoading(false);
-    }
-    fetchAd();
-  }, [location]);
+  if (type === "html" && !hasHtml) return null;
+  if (type === "media" && !hasMedia) return null;
 
-  const handleClick = async () => {
-    if (ad) {
-      await recordAdClick(ad.id);
+  const formattedLink = link?.trim() ? (
+    /^(https?:\/\/|\/|#|mailto:|tel:)/i.test(link.trim()) ? link.trim() : `https://${link.trim()}`
+  ) : "";
+
+  if (type === "html") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-7xl mx-auto px-6 py-4"
+      >
+        {formattedLink ? (
+          <a href={formattedLink} target="_blank" rel="noopener noreferrer" className="block w-full overflow-hidden rounded-2xl hover:shadow-xl transition-all duration-300">
+            <div className="w-full overflow-hidden flex justify-center items-center" dangerouslySetInnerHTML={{ __html: html! }} />
+          </a>
+        ) : (
+          <div className="w-full overflow-hidden rounded-2xl flex justify-center items-center" dangerouslySetInnerHTML={{ __html: html! }} />
+        )}
+      </motion.div>
+    );
+  }
+
+  const desktopSrc = desktop?.trim() || "";
+  const tabletSrc = tablet?.trim() || desktopSrc;
+  const mobileSrc = mobile?.trim() || tabletSrc;
+  const isVideo = (src: string) => src.toLowerCase().endsWith(".mp4");
+
+  const MediaElement = ({ src, className }: { src: string; className: string }) => {
+    if (!src) return null;
+    const styleObj = {
+      objectFit: (fit === 'centered' ? 'contain' : fit === 'stretch' ? 'fill' : 'cover') as any,
+      objectPosition: position || 'center',
+    };
+    if (isVideo(src)) {
+      return <video src={src} className={`${className} w-full h-full pointer-events-none`} style={styleObj} autoPlay muted loop playsInline />;
     }
+    return <img src={src} alt="Promotional Banner" className={`${className} w-full h-full transition-transform duration-700 group-hover:scale-[1.02] pointer-events-none`} style={styleObj} />;
   };
 
-  if (loading) return <div className="animate-pulse bg-gray-100 rounded-xl h-24 w-full" />;
-  if (!ad) return null;
+  const bannerContent = (
+    <div className="relative w-full overflow-hidden rounded-2xl shadow-lg border border-gray-100/50 bg-gray-50 flex items-center justify-center group cursor-pointer">
+      <div className="hidden lg:block w-full aspect-[1200/250] relative">
+        <MediaElement src={desktopSrc} className="rounded-2xl" />
+      </div>
+      <div className="hidden md:block lg:hidden w-full aspect-[768/200] relative">
+        <MediaElement src={tabletSrc} className="rounded-2xl" />
+      </div>
+      <div className="block md:hidden w-full aspect-[320/150] relative">
+        <MediaElement src={mobileSrc} className="rounded-2xl" />
+      </div>
+    </div>
+  );
 
   return (
-    <div className={`relative group overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all shadow-sm hover:shadow-md ${location === 'sidebar' ? 'aspect-square' : 'w-full'}`}>
-      <a 
-        href={ad.link_url} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        onClick={handleClick}
-        className="block h-full w-full"
-      >
-        <div className="absolute inset-x-0 top-0 p-4 z-10 bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
-          <span className="text-[10px] uppercase font-bold text-white tracking-widest bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm">Sponsored</span>
-        </div>
-        
-        <img 
-          src={ad.image_url || 'https://placehold.co/600x400?text=Your+Ad+Here'} 
-          alt={ad.name}
-          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-        />
-
-        <div className="absolute bottom-0 inset-x-0 p-4 bg-white/90 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-between">
-          <span className="font-bold text-xs truncate max-w-[70%]">{ad.name}</span>
-          <ExternalLink size={14} className="text-gray-400" />
-        </div>
-      </a>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="w-full max-w-7xl mx-auto px-6 py-8"
+    >
+      {formattedLink ? (
+        <a href={formattedLink} target="_blank" rel="noopener noreferrer" className="block w-full h-full cursor-pointer hover:shadow-xl transition-all duration-300 rounded-2xl">
+          {bannerContent}
+        </a>
+      ) : bannerContent}
+    </motion.div>
   );
 }
